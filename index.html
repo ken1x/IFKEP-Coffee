@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кав'ярня IFKEP</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --green-700: #38a169;
+      --green-800: #2f855a;
+      --gray-600: #4a5568;
+      --gray-900: #1a202c;
+      --transition: 0.3s ease;
+      --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .menu-item, .gallery-item {
+      transition: opacity var(--transition), transform var(--transition), box-shadow var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .menu-item {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    .menu-item.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .menu-item:hover, .gallery-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    .menu-item img, .gallery-item img {
+      transition: transform var(--transition);
+    }
+    .menu-item:hover img, .gallery-item:hover img {
+      transform: scale(1.05);
+    }
+    .gallery-item::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .gallery-item:hover::after {
+      opacity: 1;
+    }
+
+    .modal {
+      animation: fadeIn 0.3s ease-in-out;
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 100%;
+      position: relative;
+      max-height: 90vh; /* обмеження по висоті */
+      overflow-y: auto;  /* прокрутка */
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .modal-close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      color: var(--gray-600);
+      transition: color var(--transition);
+    }
+    .modal-close-btn:hover {
+      color: var(--gray-900);
+    }
+
+    .cart-fly {
+      position: fixed;
+      width: 24px;
+      height: 24px;
+      background: url('https://img.icons8.com/ios-filled/24/ffffff/shopping-cart.png') no-repeat center/cover;
+      z-index: 1000;
+      animation: flyToCart 0.8s ease-in-out forwards;
+    }
+    @keyframes flyToCart {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(0.8); }
+      100% { opacity: 0; transform: translate(var(--translate-x), var(--translate-y)) scale(0.5); }
+    }
+    .pulse {
+      animation: pulse 0.4s ease-in-out;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    #cart-count {
+      transition: transform 0.2s ease-in-out;
+    }
+    #cart-count.updated {
+      transform: scale(1.2);
+    }
+
+    .cart-item-img {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition);
+    }
+    .cart-item-img:hover {
+      transform: scale(1.1);
+    }
+
+    .delivery-toggle {
+      display: flex;
+      border: 1px solid #d2d6dc;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .delivery-toggle button {
+      flex: 1;
+      padding: 0.5rem 1rem;
+      background-color: #ffffff;
+      color: var(--gray-600);
+      font-weight: 500;
+      transition: background-color var(--transition), color var(--transition);
+    }
+    .delivery-toggle button.active {
+      background-color: var(--green-700);
+      color: #ffffff;
+    }
+    .delivery-toggle button:hover:not(.active) {
+      background-color: #edf2f7;
+    }
+
+    #map {
+      height: 500px;
+      width: 100%;
+      border-radius: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    #additional-info {
+      transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
+      opacity: 0;
+      transform: translateY(20px);
+      height: 0;
+      overflow: hidden;
+    }
+    #additional-info:not(.hidden) {
+      opacity: 1;
+      transform: translateY(0);
+      height: auto;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px; /* Адаптуйте під ваш контент */
+      }
+    }
+
+    /* Додаємо нову анімацію slideUp */
+    @keyframes slideUp {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px;
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+      }
+    }
+
+    #order-history {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: all 0.5s ease-in-out;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      margin-top: 1rem;
+    }
+    
+    #order-history.show {
+      animation: slideDown 0.5s ease-in-out forwards;
+      opacity: 1;
+      max-height: 500px;
+    }
+    
+    /* Додаємо правило для закриття з новою анімацією */
+    #order-history.hide {
+      animation: slideUp 0.5s ease-in-out forwards;
+      opacity: 0;
+      max-height: 0;
+    }
+    
+    .hidden {
+      display: none !important; /* Додаємо пріоритет */
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    #additional-info.animated-show {
+      animation: slideDown 0.5s ease-in-out forwards;
+      opacity: 1;
+      max-height: 500px;
+    }
+
+    #additional-info.animated-hide {
+      animation: slideUp 0.5s ease-in-out forwards;
+      opacity: 0;
+      max-height: 0;
+    }
+  </style>
+</head>
+<body class="font-sans">
+  <nav class="bg-white shadow-md fixed w-full z-[1000]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex">
+          <div class="flex items-center space-x-2">
+  <a href="#home" class="flex items-center space-x-2">
+    <img class="h-16 w-auto" src="assets/logo.png" alt="Логотип IFKEP">
+  </a>
+</div>
+          <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+            <a href="#home" class="border-b-2 border-transparent hover:border-green-700 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Головна</a>
+            <a href="#full-menu" class="border-b-2 border-transparent hover:border-green-700 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Меню</a>
+            <a href="#about" class="border-b-2 border-transparent hover:border-green-700 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Про нас</a>
+            <a href="#locations" class="border-b-2 border-transparent hover:border-green-700 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Локації</a>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4 ml-auto">
+          <p id="welcome-message" class="text-gray-700 hidden whitespace-nowrap"></p>
+          <button id="cart-btn" class="bg-green-700 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-800 flex items-center" aria-label="Переглянути кошик">
+            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span>Кошик (<span id="cart-count">0</span>)</span>
+          </button>
+          <button id="login-btn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-300">Вхід</button>
+          <button id="admin-panel-btn" class="bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-blue-800 hidden">Адмін панель</button>
+          <button id="profile-btn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-300 hidden" title="Особистий кабінет">
+            <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A11.955 11.955 0 0112 15c2.21 0 4.268.635 5.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Кабінет
+          </button>
+          <button id="logout-btn" class="bg-red-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-red-700 hidden">Вихід</button>
+          <span id="logout-confirm-text" class="text-red-600 font-medium ml-2 hidden">Ви дійсно бажаєте вийти?</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section id="home" class="pt-16">
+    <div class="relative bg-cover bg-center h-[600px]" style="background-image: url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')">
+      <div class="absolute inset-0 bg-black opacity-50"></div>
+      <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
+        <div class="text-center text-white">
+          <h1 class="text-4xl sm:text-5xl font-bold">Ласкаво просимо до IFKEP Coffee</h1>
+          <p class="mt-4 text-lg sm:text-xl">Створено з пристрастю, подано з любов’ю.</p>
+          <a href="#full-menu" class="mt-6 inline-block bg-green-700 text-white px-6 py-3 rounded-full text-lg font-medium hover:bg-green-800">Переглянути наше меню</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="gallery" class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-3xl font-bold text-center text-gray-900 mb-8">Моменти в IFKEP Coffee</h2>
+      <p class="text-lg text-center text-gray-600 mb-12">Відкрийте для себе тепло, смаки та атмосферу, які роблять IFKEP Coffee особливим.</p>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="gallery-item">
+          <img src="assets/intu.png" alt="Затишна кав’ярня" loading="lazy">
+        </div>
+        <div class="gallery-item">
+          <img src="assets/coffeepour.png" alt="Інтер’єр кав’ярні" loading="lazy">
+        </div>
+        <div class="gallery-item">
+          <img src="assets/coffeeplants.png" alt="Рослини в кав’ярні" loading="lazy">
+        </div>
+        <div class="gallery-item">
+          <img src="assets/coffeebar.png" alt="Бар кав’ярні" loading="lazy">
+        </div>
+        <div class="gallery-item">
+          <img src="assets/coffeeint.png" alt="Інтер’єр кав’ярні" loading="lazy">
+        </div>
+        <div class="gallery-item">
+          <img src="assets/coffeekitchen.png" alt="Бариста за роботою" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="full-menu" class="py-16 bg-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h1 class="text-4xl font-bold text-center text-gray-900 mb-8">Наше меню</h1>
+      <p class="text-lg text-center text-gray-600 mb-12">Ознайомтеся з нашими напоями та смачними десертами, створеними з пристрастю.</p>
+
+      <div class="mb-16">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">Кава</h2>
+        <div id="coffee-menu" class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"></div>
+      </div>
+
+      <div class="mb-16">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">Десерти</h2>
+        <div id="desserts-menu" class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"></div>
+      </div>
+
+      <div class="mb-16">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">Випічка</h2>
+        <div id="pastries-menu" class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"></div>
+      </div>
+
+      <div class="mb-16">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">Чай</h2>
+        <div id="teas-menu" class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <h2 class="text-3xl font-bold text-gray-900">Про IFKEP Coffee</h2>
+          <p class="mt-4 text-lg text-gray-600">У IFKEP Coffeee ми віримо в мистецтво кави. Наші зерна етично отримані, обсмажені до досконалості та заварені з турботою, щоб подарувати вам незабутні враження. Приєднуйтесь до нас у наших затишних кав’ярнях або замовляйте онлайн, щоб насолоджуватися IFKEP будь-де.</p>
+          <button id="learn-more-btn" class="mt-6 inline-block text-green-700 font-medium hover:underline">Дізнатися більше</button>
+          <div id="additional-info" class="mt-4 text-lg text-gray-600 hidden">
+            <p>Заснована у 2020 році, кав’ярня IFKEP Coffee народилася з пристрасті до виняткової кави та спільноти. Ми співпрацюємо з місцевими фермерами, щоб отримувати екологічно чисті зерна та підтримувати справедливу торгівлю. Наші кав’ярні створені як привітні простори, де процвітають творчість і зв’язки, роблячи кожен візит особливим моментом.</p>
+          </div>
+        </div>
+        <div>
+          <img class="w-full rounded-lg shadow-md" src="assets/interier.jpg" alt="Інтер’єр кав’ярні" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="locations" class="py-16 bg-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-3xl font-bold text-center text-gray-900">Знайдіть нас</h2>
+      <p class="mt-4 text-lg text-center text-gray-600">Відвідайте одну з наших локацій, щоб насолодитися теплою чашкою та привітною атмосферою.</p>
+      <div class="mt-12">
+        <div id="map"></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1000]" role="dialog" aria-labelledby="login-modal-title">
+    <div class="modal">
+      <button id="login-close-btn" class="modal-close-btn" aria-label="Закрити модальне вікно входу">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <h2 id="login-modal-title" class="text-2xl font-bold text-gray-900 mb-6">Вхід</h2>
+      <form id="login-form">
+        <div class="mb-4">
+          <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
+          <input type="email" id="login-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваш email" required>
+        </div>
+        <div class="relative">
+          <input type="password" id="login-password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 pr-10 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваш пароль" required>
+          <button type="button" id="toggle-password-visibility" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500">
+            <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-.282.876-.676 1.702-1.17 2.448M15 12a3 3 0 01-6 0" />
+            </svg>
+          </button>
+        </div>
+        <div class="text-right">
+          <a href="#" id="forgot-password-link" class="text-sm text-green-700 hover:underline">Забули пароль?</a>
+        </div>
+        <p id="login-error" class="text-red-600 text-sm hidden"></p>
+        <div class="mt-6 flex justify-end space-x-4">
+          <button type="button" id="switch-to-signup" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300">Реєстрація</button>
+          <button type="submit" class="px-4 py-2 bg-green-700 text-white rounded-full hover:bg-green-800">Увійти</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="signup-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1000]" role="dialog" aria-labelledby="signup-modal-title">
+    <div class="modal">
+      <button id="signup-close-btn" class="modal-close-btn" aria-label="Закрити модальне вікно реєстрації">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <h2 id="signup-modal-title" class="text-2xl font-bold text-gray-900 mb-6">Реєстрація</h2>
+      <form id="signup-form">
+        <div class="mb-4">
+          <label for="signup-email" class="block text-sm font-medium text-gray-700">Email</label>
+          <input type="email" id="signup-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваш email" required>
+        </div>
+        <!-- Заміна поля пароля -->
+        <div class="mb-4">
+          <label for="signup-password" class="block text-sm font-medium text-gray-700">Пароль</label>
+          <div class="relative">
+            <input type="password" id="signup-password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 pr-10 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваш пароль" required>
+            <button type="button" id="toggle-signup-password" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500" tabindex="-1">
+              <svg id="signup-eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label for="signup-confirm-password" class="block text-sm font-medium text-gray-700">Підтвердження пароля</label>
+          <input type="password" id="signup-confirm-password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Підтвердіть пароль" required>
+        </div>
+        <p id="signup-error" class="text-red-600 text-sm hidden"></p>
+        <div class="mt-6 flex justify-end space-x-4">
+          <button type="button" id="switch-to-login" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300">Вхід</button>
+          <button type="submit" class="px-4 py-2 bg-green-700 text-white rounded-full hover:bg-green-800">Зареєструватися</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Cart Modal -->
+  <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1000]" role="dialog" aria-labelledby="cart-modal-title">
+    <div class="modal">
+      <button id="cart-close-btn" class="modal-close-btn" aria-label="Закрити модальне вікно кошика">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <div class="delivery-toggle">
+        <button id="pickup-toggle" class="active">Самовивіз</button>
+        <button id="delivery-toggle">Доставка</button>
+      </div>
+      <h2 id="cart-modal-title" class="text-2xl font-bold text-gray-900 mb-6">Ваш кошик</h2>
+      <div id="cart-items" class="space-y-4 max-h-96 overflow-y-auto"></div>
+      <div class="mt-6 border-t pt-4">
+        <p class="text-lg font-semibold text-gray-900">Загалом: <span id="cart-total">0.00</span> грн</p>
+      </div>
+      <div class="mt-6 flex justify-end space-x-4">
+        <button id="cart-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300">Продовжити покупки</button>
+        <button id="checkout-btn" class="px-4 py-2 bg-green-700 text-white rounded-full hover:bg-green-800 disabled:bg-gray-400" disabled>Перейти до оформлення</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1000]" role="dialog" aria-labelledby="checkout-modal-title">
+    <div class="modal">
+      <button id="checkout-close-btn" class="modal-close-btn" aria-label="Закрити модальне вікно оформлення">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <h2 id="checkout-modal-title" class="text-2xl font-bold text-gray-900 mb-6">Створити замовлення</h2>
+      <div id="checkout-items" class="space-y-4 max-h-96 overflow-y-auto"></div>
+
+      <div id="pickup-fields" class="mb-4">
+        <label for="checkout-location" class="block text-sm font-medium text-gray-700">Локація самовивозу</label>
+        <select id="checkout-location" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700">
+          <option value="" disabled selected>Оберіть локацію</option>
+          <option value="Центр IFKEP">Центр IFKEP</option>
+          <option value="Верхнє місто IFKEP">Верхнє місто IFKEP</option>
+        </select>
+      </div>
+
+      <div id="delivery-fields" class="mb-4 hidden">
+        <label for="delivery-address" class="block text-sm font-medium text-gray-700">Адреса доставки</label>
+        <input type="text" id="delivery-address" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700">
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Коли?</label>
+        <div class="flex space-x-4 mb-4">
+          <button id="asap-button" type="button" class="flex-1 border rounded-md p-2 text-center bg-green-100 border-green-500 text-green-800 font-semibold">Якнайшвидше</button>
+          <button id="choose-time-button" type="button" class="flex-1 border rounded-md p-2 text-center hover:bg-gray-100">Обрати час</button>
+        </div>
+        <div id="time-selection" class="flex space-x-4 hidden">
+          <select id="date-select" class="w-1/2 border rounded-md p-2">
+            <option value="today">Сьогодні</option>
+            <option value="tomorrow">Завтра</option>
+          </select>
+          <select id="time-input" class="w-1/2 border rounded-md p-2">
+          </select>
+        </div>
+      </div>
+
+      <div class="mt-6 border-t pt-4">
+        <p class="text-lg font-semibold text-gray-900">Загалом: <span id="checkout-total">0.00</span> грн</p>
+      </div>
+      <form id="order-form">
+        <div class="mb-4">
+          <label for="order-first-name" class="block text-sm font-medium text-gray-700">Ім'я</label>
+          <input type="text" id="order-first-name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваше ім'я" required>
+        </div>
+        <div class="mb-4">
+          <label for="order-last-name" class="block text-sm font-medium text-gray-700">Прізвище</label>
+          <input type="text" id="order-last-name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваше прізвище" required>
+        </div>
+        <div class="mb-4">
+          <label for="order-email" class="block text-sm font-medium text-gray-700">Email</label>
+          <input type="email" id="order-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваш email" required>
+        </div>
+        <div class="mb-4">
+          <label for="order-phone" class="block text-sm font-medium text-gray-700">Номер телефону</label>
+          <input type="tel" id="order-phone" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваш номер телефону" required>
+        </div>
+        <p id="order-error" class="text-red-600 text-sm hidden"></p>
+        <div class="mt-6 flex justify-end space-x-4">
+          <button type="button" id="checkout-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300">Скасувати</button>
+          <button type="submit" id="submit-order-btn" class="px-4 py-2 bg-green-700 text-white rounded-full hover:bg-green-800">Відправити замовлення</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="bg-gray-900 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div>
+          <h3 class="text-lg font-semibold">IFKEP Coffee</h3>
+          <p class="mt-4 text-gray-400">Створюємо виняткові кавові враження з 2020 року.</p>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold">Швидкі посилання</h3>
+          <ul class="mt-4 space-y-2">
+            <li><a href="#full-menu" class="text-gray-400 hover:text-white">Меню</a></li>
+            <li><a href="#about" class="text-gray-400 hover:text-white">Про нас</a></li>
+            <li><a href="#locations" class="text-gray-400 hover:text-white">Локації</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold">Контакти</h3>
+          <ul class="mt-4 space-y-2">
+            <li><a href="mailto:info@ifkep.com" class="text-gray-400 hover:text-white">kirill06904@gmail.com</a></li>
+            <li><a href="tel:+1234567890" class="text-gray-400 hover:text-white">+38 (093) 678-40-19</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold">Слідкуйте за нами</h3>
+          <div class="mt-4 flex space-x-4">
+            <a href="https://www.facebook.com/profile.php?id=100080633690012" class="text-gray-400 hover:text-white" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2.04c-5.5 0-9.96 4.46-9.96 9.96 0 4.41 3.59 8.07 8.36 9.46v-6.7H7.76v-2.76h2.64V9.7c0-2.61 1.59-4.03 3.91-4.03 1.11 0 2.07.08 2.35.12v2.73h-1.61c-1.26 0-1.5.6-1.5 1.47v1.93h3.01l-.39 2.76h-2.62v6.7c4.77-1.39 8.36-5.05 8.36-9.46 0-5.5-4.46-9.96-9.96-9.96z"/>
+            </a>
+  <a href="https://www.instagram.com/grano_mercato/" class="text-gray-400 hover:text-white" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+  </svg>
+</a>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="mt-12 border-t border-gray-700 pt-8 text-center">
+        <p class="text-gray-400">© 2025 IFKEP Coffee. Усі права захищено.</p>
+      </div>
+    </div>
+  </footer>
+<div id="admin-panel-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1000]">
+  <div class="modal max-w-3xl w-full">
+    <button id="admin-close-btn" class="modal-close-btn" aria-label="Закрити">
+      <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+    <h2 class="text-2xl font-bold mb-4">Адмін панель – Меню</h2>
+
+    <form id="admin-item-form" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <input type="hidden" id="admin-item-id">
+      <input type="text" id="admin-item-name" placeholder="Назва" required class="p-2 border rounded">
+      <input type="text" id="admin-item-image" placeholder="URL зображення" required class="p-2 border rounded">
+      <input type="text" id="admin-item-description" placeholder="Опис" required class="p-2 border rounded col-span-2">
+      <input type="number" id="admin-item-price" placeholder="Ціна" required class="p-2 border rounded">
+      <select id="admin-item-category" class="p-2 border rounded" required>
+        <option value="Coffee">Кава</option>
+        <option value="Desserts">Десерти</option>
+        <option value="Pastries">Випічка</option>
+        <option value="Teas">Чай</option>
+      </select>
+      <button type="submit" class="col-span-2 bg-green-700 text-white py-2 rounded hover:bg-green-800">Зберегти</button>
+    </form>
+
+    <div id="admin-menu-list" class="space-y-4 max-h-96 overflow-y-auto"></div>
+  </div>
+</div>
+  <div id="forgot-password-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1000]">
+    <div class="modal">
+      <button id="forgot-close-btn" class="modal-close-btn" aria-label="Закрити">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Відновлення паролю</h2>
+      <form id="forgot-password-form">
+        <div class="mb-4">
+          <label for="forgot-email" class="block text-sm font-medium text-gray-700">Email</label>
+          <input type="email" id="forgot-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть вашу електронну пошту" required>
+        </div>
+        <p id="forgot-error" class="text-red-600 text-sm hidden"></p>
+        <div class="mt-6 flex justify-end space-x-4">
+          <button type="button" id="forgot-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300">Скасувати</button>
+          <button type="submit" class="px-4 py-2 bg-green-700 text-white rounded-full hover:bg-green-800">Надіслати</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модальне вікно Особистого Кабінету -->
+  <div id="profile-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1000]">
+    <div class="modal max-w-lg w-full">
+      <button id="profile-close-btn" class="modal-close-btn" aria-label="Закрити">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <h2 class="text-2xl font-bold mb-4">Особистий кабінет</h2>
+      <p class="mb-2">Email: <span id="profile-email" class="font-medium text-gray-800"></span></p>
+      <button id="order-history-btn" class="mt-4 px-4 py-2 bg-green-700 text-white rounded-full hover:bg-green-800">Історія замовлень</button>
+
+      <div id="order-history" class="mt-6 hidden">
+        <h3 class="text-xl font-semibold mb-2">Ваші замовлення</h3>
+        <div id="order-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut,
+      sendEmailVerification,
+      sendPasswordResetEmail 
+    } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      serverTimestamp,
+      doc,
+      getDoc,
+      getDocs,
+      setDoc,
+      deleteDoc,
+      onSnapshot,
+      query,
+      where
+    } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAw4EFMljD-zkoeSGKdwBYexE59TyTuUrA",
+      authDomain: "coffee-dfbc9.firebaseapp.com",
+      projectId: "coffee-dfbc9",
+      storageBucket: "coffee-dfbc9.firebasestorage.app",
+      messagingSenderId: "879309235341",
+      appId: "1:879309235341:web:7d856efb43f76816592ec4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.firebase = {
+      auth,
+      db,
+      doc,
+      getDoc,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut,
+      sendEmailVerification,
+      sendPasswordResetEmail, 
+      collection,
+      addDoc,
+      serverTimestamp,
+      getDocs,
+      setDoc,
+      deleteDoc,
+      onSnapshot
+    };
+
+    const state = {
+      cart: [],
+      deliveryMethod: 'pickup',
+      menuItems: (JSON.parse(localStorage.getItem('menuItems')) || []).map(item => ({ ...item, id: item.id.toString() })),
+      itemImageMap: {},
+      user: null, 
+    };
+
+    const DOM = {
+      cartBtn: document.getElementById('cart-btn'),
+      cartModal: document.getElementById('cart-modal'),
+      cartCloseBtn: document.getElementById('cart-close-btn'),
+      cartCancelBtn: document.getElementById('cart-cancel-btn'),
+      checkoutBtn: document.getElementById('checkout-btn'),
+      cartItemsContainer: document.getElementById('cart-items'),
+      cartTotalElement: document.getElementById('cart-total'),
+      cartCountElement: document.getElementById('cart-count'),
+      pickupToggle: document.getElementById('pickup-toggle'),
+      deliveryToggle: document.getElementById('delivery-toggle'),
+      checkoutModal: document.getElementById('checkout-modal'),
+      checkoutCloseBtn: document.getElementById('checkout-close-btn'),
+      checkoutCancelBtn: document.getElementById('checkout-cancel-btn'),
+      submitOrderBtn: document.getElementById('submit-order-btn'),
+      checkoutItemsContainer: document.getElementById('checkout-items'),
+      checkoutTotalElement: document.getElementById('checkout-total'),
+      checkoutLocation: document.getElementById('checkout-location'),
+      pickupFields: document.getElementById('pickup-fields'),
+      deliveryFields: document.getElementById('delivery-fields'),
+      deliveryAddress: document.getElementById('delivery-address'),
+      customerName: document.getElementById('customer-name'),
+      customerPhone: document.getElementById('customer-phone'),
+      learnMoreBtn: document.getElementById('learn-more-btn'),
+      additionalInfo: document.getElementById('additional-info'),
+      loginBtn: document.getElementById('login-btn'),
+      logoutBtn: document.getElementById('logout-btn'),
+      loginModal: document.getElementById('login-modal'),
+      loginCloseBtn: document.getElementById('login-close-btn'),
+      loginForm: document.getElementById('login-form'),
+      loginEmail: document.getElementById('login-email'),
+      loginPassword: document.getElementById('login-password'),
+      loginError: document.getElementById('login-error'),
+      switchToSignup: document.getElementById('switch-to-signup'),
+      signupModal: document.getElementById('signup-modal'),
+      signupCloseBtn: document.getElementById('signup-close-btn'),
+      signupForm: document.getElementById('signup-form'),
+      signupEmail: document.getElementById('signup-email'),
+      signupPassword: document.getElementById('signup-password'),
+      signupConfirmPassword: document.getElementById('signup-confirm-password'),
+      signupError: document.getElementById('signup-error'),
+      switchToLogin: document.getElementById('switch-to-login'),
+      orderForm: document.getElementById('order-form'),
+      orderFirstName: document.getElementById('order-first-name'),
+      orderLastName: document.getElementById('order-last-name'),
+      orderEmail: document.getElementById('order-email'),
+      orderPhone: document.getElementById('order-phone'),
+      orderError: document.getElementById('order-error'),
+      welcomeMessage: document.getElementById('welcome-message'),
+      forgotPasswordLink: document.getElementById('forgot-password-link'),
+      forgotPasswordModal: document.getElementById('forgot-password-modal'),
+      forgotCloseBtn: document.getElementById('forgot-close-btn'),
+      forgotCancelBtn: document.getElementById('forgot-cancel-btn'),
+      forgotForm: document.getElementById('forgot-password-form'),
+      forgotEmailInput: document.getElementById('forgot-email'),
+      forgotError: document.getElementById('forgot-error'),
+    };
+
+    const utils = {
+      updateItemImageMap() {
+        state.itemImageMap = {};
+        state.menuItems.forEach(item => {
+          state.itemImageMap[item.name] = item.image;
+        });
+      },
+
+      validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+      },
+
+      validateName(name) {
+        return typeof name === 'string' && name.length >= 2 && name.length <= 50;
+      },
+
+      validatePhone(phone) {
+        const re = /^\+?[\d\s\-]{7,15}$/;
+        return re.test(phone);
+      },
+
+      sanitizeInput(input) {
+        return input.replace(/[<>]/g, '');
+      },
+
+      showAlert(message, type = 'info') {
+        Swal.fire({
+          icon: type,
+          title:
+            type === 'success'
+              ? 'Готово!'
+              : type === 'error'
+              ? 'Помилка'
+              : type === 'warning'
+              ? 'Увага'
+              : 'Повідомлення',
+          text: message,
+          confirmButtonColor: '#38a169'
+        });
+      }
+    };
+
+    const menuService = {
+      async fetchMenuItems() {
+        const snapshot = await getDocs(collection(firebase.db, 'menuItems'));
+        // Ensure each menu item contains a unique id taken from doc.id
+        state.menuItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        utils.updateItemImageMap();
+        menu.renderItems();
+      },      async saveMenuItem(item) {
+        try {
+          console.log('Saving item:', item);
+          
+          const itemData = {
+            name: item.name,
+            image: item.image,
+            description: item.description,
+            price: parseFloat(item.price),
+            category: item.category
+          };
+
+          if (item.id) {
+            const ref = doc(firebase.db, 'menuItems', item.id);
+            await setDoc(ref, itemData);
+            console.log('Updated existing item with id:', item.id);
+          } else {
+            const ref = collection(firebase.db, 'menuItems');
+            const newDocRef = await addDoc(ref, itemData);
+            console.log('Created new item with id:', newDocRef.id);
+          }
+        } catch (error) {
+          console.error("Помилка збереження елемента меню:", error);
+          utils.showAlert("Не вдалося зберегти елемент меню: " + error.message, "error");
+        }
+      },
+
+      async deleteMenuItem(id) {
+        const ref = doc(firebase.db, 'menuItems', id);
+        await deleteDoc(ref);
+      },
+
+      listenToMenuChanges() {
+        const ref = firebase.collection(firebase.db, 'menuItems');
+        onSnapshot(ref, (snapshot) => {
+          state.menuItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          utils.updateItemImageMap();
+          menu.renderItems();
+          if (document.getElementById('admin-panel-modal')?.classList.contains('hidden') === false) {
+            renderAdminList();
+          }
+        });
+      }
+    };
+
+    
+    const authManager = {
+      justLoggedIn: false, 
+
+      initAuth() {
+        firebase.onAuthStateChanged(firebase.auth, async user => {
+          state.user = user;
+
+          if (user) {
+            const adminRef = firebase.doc(firebase.db, 'admins', user.uid);
+            firebase.getDoc(adminRef).then(docSnapshot => {
+              if (docSnapshot.exists() && docSnapshot.data().role === 'admin') {
+                document.getElementById('admin-panel-btn').classList.remove('hidden');
+              }
+            });
+            DOM.loginBtn.classList.add('hidden');
+            DOM.logoutBtn.classList.remove('hidden');
+
+            if (!user.emailVerified) {
+              await firebase.signOut(firebase.auth);
+              this.showError(DOM.loginError, 'Будь ласка, підтвердіть вашу електронну пошту.');
+              return;
+            }
+            document.getElementById('admin-panel-btn').classList.add('hidden');
+
+            if (this.justLoggedIn) {
+              utils.showAlert('Успішний вхід!');
+              this.justLoggedIn = false;
+            }
+
+            cart.updateUI();
+            document.getElementById('login-btn').style.display = 'none';
+          } else {
+            DOM.loginBtn.classList.remove('hidden');
+            DOM.logoutBtn.classList.add('hidden');
+            document.getElementById('admin-panel-btn').classList.add('hidden');
+            cart.updateUI();
+            document.getElementById('login-btn').style.display = '';
+          }
+        });
+      },
+
+      async login(email, password) {
+        try {
+          this.justLoggedIn = true;
+          const userCredential = await firebase.signInWithEmailAndPassword(firebase.auth, email, password);
+          const user = userCredential.user;
+
+          if (!user.emailVerified) {
+            await firebase.signOut(firebase.auth);
+            this.showError(DOM.loginError, 'Будь ласка, підтвердіть вашу електронну пошту.');
+            return;
+          }
+
+          DOM.loginModal.classList.add('hidden');
+        } catch (error) {
+          this.showError(DOM.loginError, this.getErrorMessage(error.code));
+        }
+      },
+
+      async signup(email, password, confirmPassword) {
+        if (password !== confirmPassword) {
+          return this.showError(DOM.signupError, 'Паролі не співпадають.');
+        }
+
+        if (password.length < 6) {
+          return this.showError(DOM.signupError, 'Пароль має містити щонайменше 6 символів.');
+        }
+
+        try {
+          const userCredential = await firebase.createUserWithEmailAndPassword(firebase.auth, email, password);
+          const user = userCredential.user;
+
+          await firebase.sendEmailVerification(user);
+          DOM.signupModal.classList.add('hidden');
+          utils.showAlert('Реєстрація успішна! Перевірте вашу електронну пошту для підтвердження.');
+        } catch (error) {
+          this.showError(DOM.signupError, this.getErrorMessage(error.code));
+        }
+      },
+
+      async logout() {
+        try {
+          await firebase.signOut(firebase.auth);
+          utils.showAlert('Ви вийшли з акаунта.');
+        } catch (error) {
+          utils.showAlert('Помилка при виході: ' + error.message);
+        }
+      },
+
+      showError(element, message) {
+        element.textContent = message;
+        element.classList.remove('hidden');
+      },
+
+      getErrorMessage(code) {
+        const messages = {
+          'auth/email-already-in-use': 'Цей email вже зареєстровано.',
+          'auth/invalid-email': 'Недійсний email.',
+          'auth/wrong-password': 'Неправильний пароль.',
+          'auth/user-not-found': 'Користувача не знайдено.',
+        };
+        return messages[code] || 'Сталася помилка. Спробуйте ще раз.';
+      }
+    };
+
+    const orderManager = {
+      async submitOrder(e) {
+        e.preventDefault();
+
+        if (!state.user) {
+          DOM.checkoutModal.classList.add('hidden');
+          DOM.loginModal.classList.remove('hidden');
+          utils.showAlert('Будь ласка, увійдіть, щоб створити замовлення.');
+          return;
+        }
+
+        const firstName = utils.sanitizeInput(DOM.orderFirstName.value.trim());
+        const lastName = utils.sanitizeInput(DOM.orderLastName.value.trim());
+        const email = utils.sanitizeInput(DOM.orderEmail.value.trim());
+        const phone = utils.sanitizeInput(DOM.orderPhone.value.trim());
+
+        const errors = [];
+
+        if (!utils.validateName(firstName)) errors.push('Ім’я має містити 2-50 символів.');
+        if (!utils.validateName(lastName)) errors.push('Прізвище має містити 2-50 символів.');
+        if (!utils.validateEmail(email)) errors.push('Email некоректний.');
+        if (!utils.validatePhone(phone)) errors.push('Телефон некоректний.');
+
+        if (errors.length > 0) {
+          this.showError(errors.join(' '));
+          return;
+        }
+        try {
+          const now = new Date();
+          const dateStr = now.toISOString().replace(/[:.]/g, '-');
+          const orderId = `order-${dateStr}`;
+          
+          // --- Формування orderDetails ---
+          let orderDetails = {
+            userId: state.user.uid,
+            firstName, 
+            lastName, 
+            email, 
+            phone,
+            items: state.cart,
+            total: parseFloat(DOM.checkoutTotalElement.textContent),
+            deliveryMethod: state.deliveryMethod,
+            createdAt: firebase.serverTimestamp(),
+          };
+
+          // === Додаємо тип часу та деталі часу ===
+          orderDetails.deliveryTimeType = selectedTime;
+          if (selectedTime === 'custom') {
+            orderDetails.date = document.getElementById('date-select').value;
+            orderDetails.time = document.getElementById('time-input').value;
+          }
+
+          if (state.deliveryMethod === 'delivery') {
+            const address = utils.sanitizeInput(DOM.deliveryAddress.value);
+            if (!address) {
+              utils.showAlert('Будь ласка, введіть адресу доставки.');
+              return;
+            }
+            orderDetails.deliveryAddress = address;
+          }
+
+          if (state.deliveryMethod === 'pickup') {
+            const location = DOM.checkoutLocation.value;
+            if (!location) {
+              utils.showAlert('Будь ласка, оберіть локацію самовивозу.');
+              return;
+            }
+            orderDetails.location = location;
+          }
+
+          const orderRef = firebase.doc(firebase.db, 'orders', orderId);
+          await firebase.setDoc(orderRef, orderDetails);
+
+          utils.showAlert('Замовлення успішно створено!');
+          DOM.checkoutModal.classList.add('hidden');
+          DOM.orderForm.reset();
+          state.cart = []; 
+          cart.updateUI();
+
+        } catch (err) {
+          this.showError('Помилка при створенні замовлення: ' + err.message);
+        }
+      },
+
+      showError(message) {
+        DOM.orderError.textContent = message;
+        DOM.orderError.classList.remove('hidden');
+      },
+    };
+
+    const menu = {
+      sections: {
+        Coffee: document.getElementById('coffee-menu'),
+        Desserts: document.getElementById('desserts-menu'),
+        Pastries: document.getElementById('pastries-menu'),
+        Teas: document.getElementById('teas-menu'),
+      },
+      renderItems() {
+        Object.entries(this.sections).forEach(([category, container]) => {
+          container.innerHTML = '';
+          const items = state.menuItems.filter(item => item.category === category);
+          items.forEach(item => {
+            const menuItem = document.createElement('div');
+            menuItem.className = 'menu-item bg-white rounded-lg shadow-md overflow-hidden';
+            menuItem.innerHTML = `
+              <img class="w-full h-48 object-cover" src="${item.image}" alt="${item.name}" loading="lazy">
+              <div class="p-6">
+                <h3 class="text-xl font-semibold text-gray-900">${item.name}</h3>
+                <p class="mt-2 text-gray-600">${item.description}</p>
+                <p class="mt-4 font-medium text-green-700">${item.price} грн</p>
+                <button class="add-to-cart mt-4 w-full bg-green-700 text-white py-2 rounded-full hover:bg-green-800" data-name="${item.name}" data-price="${item.price}">Додати до кошика</button>
+              </div>
+            `;
+            container.appendChild(menuItem);
+          });
+        });
+        this.observeItems();
+      },
+      observeItems() {
+        const items = document.querySelectorAll('.menu-item');
+        const observer = new IntersectionObserver(
+          entries => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.1 }
+        );
+        items.forEach(item => observer.observe(item));
+      },
+    };
+
+    const cart = {
+      addItem(name, price, button) {
+        const item = state.cart.find(i => i.name === name);
+        if (item) {
+          item.quantity += 1;
+        } else {
+          state.cart.push({ name, price, quantity: 1 });
+        }
+        this.animateCartAdd(button);
+        this.updateUI();
+      },
+      animateCartAdd(button) {
+        const rect = button.getBoundingClientRect();
+        const cartIcon = document.createElement('div');
+        cartIcon.className = 'cart-fly';
+        cartIcon.style.left = `${rect.left + rect.width / 2}px`;
+        cartIcon.style.top = `${rect.top + rect.height / 2}px`;
+        document.body.appendChild(cartIcon);
+
+        const cartBtnRect = DOM.cartBtn.getBoundingClientRect();
+        cartIcon.style.setProperty('--translate-x', `${cartBtnRect.left - rect.left}px`);
+        cartIcon.style.setProperty('--translate-y', `${cartBtnRect.top - rect.top}px`);
+
+        DOM.cartBtn.classList.add('pulse');
+        setTimeout(() => DOM.cartBtn.classList.remove('pulse'), 400);
+        cartIcon.addEventListener('animationend', () => cartIcon.remove());
+      },
+      updateUI() {
+        const hasItems = state.cart.length > 0;
+        const userLoggedIn = !!state.user;
+        console.log('Updating cart UI', { hasItems, userLoggedIn, cart: state.cart });
+
+        DOM.cartItemsContainer.innerHTML = hasItems
+          ? ''
+          : '<p class="text-gray-600">Ваш кошик порожній.</p>';
+
+        let total = 0;
+        let itemCount = 0;
+
+        state.cart.forEach((item, index) => {
+          const itemTotal = item.price * item.quantity;
+          total += itemTotal;
+          itemCount += item.quantity;
+
+          const cartItem = document.createElement('div');
+          cartItem.className = 'flex justify-between items-center border-b py-2';
+          cartItem.innerHTML = `
+            <div class="flex items-center space-x-3">
+              <img src="${state.itemImageMap[item.name] || 'https://via.placeholder.com/40'}" alt="${item.name}" class="cart-item-img">
+              <div>
+                <p class="font-medium text-gray-900">${item.name}</p>
+                <p class="text-gray-600">${item.price} грн x ${item.quantity} = ${itemTotal} грн</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button class="decrease-qty px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" data-index="${index}">-</button>
+              <span>${item.quantity}</span>
+              <button class="increase-qty px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" data-index="${index}">+</button>
+              <button class="remove-item text-red-600 hover:text-red-800" data-index="${index}">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+          `;
+          DOM.cartItemsContainer.appendChild(cartItem);
+        });
+
+        DOM.cartTotalElement.textContent = total.toFixed(2);
+        DOM.cartCountElement.textContent = itemCount;
+        DOM.cartCountElement.classList.add('updated');
+        setTimeout(() => DOM.cartCountElement.classList.remove('updated'), 200);
+
+        DOM.checkoutBtn.disabled = !(hasItems && userLoggedIn);
+      },
+      updateCheckoutUI() {
+        console.log('Updating checkout UI', { deliveryMethod: state.deliveryMethod, cart: state.cart });
+        DOM.checkoutItemsContainer.innerHTML = '';
+        let total = 0;
+
+        state.cart.forEach(item => {
+          const itemTotal = item.price * item.quantity;
+          total += itemTotal;
+          const checkoutItem = document.createElement('div');
+          checkoutItem.className = 'flex justify-between';
+          checkoutItem.innerHTML = `
+            <p>${item.name} x${item.quantity}</p>
+            <p>${itemTotal} грн</p>
+          `;
+          DOM.checkoutItemsContainer.appendChild(checkoutItem);
+        });
+
+        DOM.checkoutTotalElement.textContent = total.toFixed(2);
+        console.log('Checkout fields visibility', {
+          pickupHidden: DOM.pickupFields.classList.contains('hidden'),
+          deliveryHidden: DOM.deliveryFields.classList.contains('hidden')
+        });
+        DOM.pickupFields.classList.toggle('hidden', state.deliveryMethod !== 'pickup');
+        DOM.deliveryFields.classList.toggle('hidden', state.deliveryMethod !== 'delivery');
+      },
+      submitOrder() {
+        if (!state.cart.length) {
+          utils.showAlert('Ваш кошик порожній.');
+          return;
+        }
+
+        if (!state.user) {
+          utils.showAlert('Будь ласка, увійдіть, щоб оформити замовлення.');
+          DOM.checkoutModal.classList.add('hidden');
+          DOM.loginModal.classList.remove('hidden');
+          return;
+        }
+
+        const customerName = utils.sanitizeInput(DOM.customerName.value.trim());
+        const customerPhone = utils.sanitizeInput(DOM.customerPhone.value.trim());
+
+        if (!customerName || !customerPhone) {
+          utils.showAlert('Будь ласка, введіть ім’я, прізвище та номер телефону.');
+          return;
+        }
+
+        let orderDetails;
+        if (state.deliveryMethod === 'pickup') {
+          const location = DOM.checkoutLocation.value;
+          if (!location) {
+            utils.showAlert('Будь ласка, оберіть локацію самовивозу.');
+            return;
+          }
+          orderDetails = { 
+            items: state.cart, 
+            customerName, 
+            customerPhone, 
+            location,
+            total: parseFloat(DOM.checkoutTotalElement.textContent)
+          };
+        } else {
+          const address = utils.sanitizeInput(DOM.deliveryAddress.value);
+          if (!address) {
+            utils.showAlert('Будь ласка, введіть адресу доставки.');
+            return;
+          }
+          orderDetails = { 
+            items: state.cart, 
+            customerName, 
+            customerPhone, 
+            deliveryAddress: address,
+            total: parseFloat(DOM.checkoutTotalElement.textContent)
+          };
+        }
+
+        console.log('Замовлення:', orderDetails);
+        utils.showAlert('Замовлення успішно розміщено!');
+        state.cart = [];
+        this.updateUI();
+        DOM.checkoutModal.classList.add('hidden');
+        DOM.customerName.value = '';
+        DOM.customerPhone.value = '';
+      },
+    };
+
+    const profileModal = document.getElementById('profile-modal');
+    const profileBtn = document.getElementById('profile-btn');
+    const profileCloseBtn = document.getElementById('profile-close-btn');
+    const profileEmail = document.getElementById('profile-email');
+    const orderHistoryBtn = document.getElementById('order-history-btn');
+    const orderHistory = document.getElementById('order-history');
+    const orderList = document.getElementById('order-list');
+
+    profileBtn.addEventListener('click', () => {
+      profileEmail.textContent = firebase.auth.currentUser?.email || '';
+      profileModal.classList.remove('hidden');
+    });
+
+    profileCloseBtn.addEventListener('click', () => {
+      profileModal.classList.add('hidden');
+      orderHistory.classList.add('hidden');
+    });
+
+    orderHistoryBtn.addEventListener('click', async () => {
+      if (!orderHistory || !orderList) return;
+      const isVisible = orderHistory.classList.contains('show');
+      if (isVisible) {
+        // Запуск анімації закриття
+        orderHistory.classList.add('hide');
+        orderHistory.classList.remove('show');
+        orderHistory.addEventListener('animationend', () => {
+          orderHistory.classList.add('hidden');
+          orderHistory.classList.remove('hide');
+        }, { once: true });
+      } else {
+        // Видаляємо hidden та запускаємо анімацію відкриття
+        orderHistory.classList.remove('hidden');
+        orderHistory.classList.add('show');
+        orderList.innerHTML = '<p>Завантаження...</p>';
+        try {
+          const q = query(collection(firebase.db, 'orders'), where('userId', '==', firebase.auth.currentUser.uid));
+          const snapshot = await getDocs(q);
+          const orders = snapshot.docs
+            .map(doc => doc.data())
+            .sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
+          orderList.innerHTML = '';
+          if ( orders.length === 0) {
+            orderList.innerHTML = '<p class="text-gray-500 py-2">Немає замовлень</p>';
+          } else {
+           
+
+            orders.forEach(order => {
+              const el = document.createElement('div');
+              el.className = 'bg-gray-50 p-3 rounded-lg mb-2 animate-fade-in';
+              el.innerHTML = `
+                <div class="flex justify-between items-center">
+                  <p class="font-medium">${new Date(order.createdAt?.seconds * 1000).toLocaleDateString()}</p>
+                  <span class="text-green-700 font-bold">${order.total} грн</span>
+                </div>
+                <div class="text-sm text-gray-600 mt-1">
+                  ${order.items.map(i => `${i.name} x${i.quantity}`).join(', ')}
+                </div>
+              `;
+              orderList.appendChild(el);
+            });
+          }
+        } catch (error) {
+          orderList.innerHTML = `<p class="text-red-500">Помилка: ${error.message}</p>`;
+        }
+      }
+    });
+
+    // Toggle profile button visibility based on authentication state
+    firebase.onAuthStateChanged(firebase.auth, (user) => {
+      profileBtn.classList.toggle('hidden', !user);
+    });
+
+    const initEvents = () => {
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', e => {
+          e.preventDefault();
+          const targetId = anchor.getAttribute('href').slice(1);
+          document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+        });
+      });
+
+      document.addEventListener('click', e => {
+        const addToCartBtn = e.target.closest('.add-to-cart');
+        if (addToCartBtn) {
+          const { name, price } = addToCartBtn.dataset;
+          console.log('Adding to cart', { name, price });
+          cart.addItem(name, parseFloat(price), addToCartBtn);
+        }
+
+        const cartActionBtn = e.target.closest('.increase-qty, .decrease-qty, .remove-item');
+
+        if (cartActionBtn) {
+          const index = parseInt(cartActionBtn.dataset.index);
+          if (cartActionBtn.classList.contains('increase-qty')) {
+            state.cart[index].quantity += 1;
+          } else if (cartActionBtn.classList.contains('decrease-qty')) {
+            state.cart[index].quantity -= 1;
+            if (state.cart[index].quantity === 0) state.cart.splice(index, 1);
+          } else if (cartActionBtn.classList.contains('remove-item')) {
+            state.cart.splice(index, 1);
+          }
+          cart.updateUI();
+        }
+      });
+
+      DOM.cartBtn.addEventListener('click', () => {
+        cart.updateUI();
+        DOM.cartModal.classList.remove('hidden');
+      });
+
+      DOM.cartCloseBtn.addEventListener('click', () => DOM.cartModal.classList.add('hidden'));
+      DOM.cartCancelBtn.addEventListener('click', () => DOM.cartModal.classList.add('hidden'));
+      DOM.checkoutBtn.addEventListener('click', () => {
+        console.log('Checkout button clicked', { user: state.user, cart: state.cart });
+        if (!state.user) {
+          console.log('User not logged in, showing login modal');
+          DOM.cartModal.classList.add('hidden');
+          DOM.loginModal.classList.remove('hidden');
+          utils.showAlert('Будь ласка, увійдіть, щоб оформити замовлення.');
+          return;
+        }
+        console.log('User logged in, proceeding to checkout');
+        cart.updateCheckoutUI();
+        DOM.cartModal.classList.add('hidden');
+        DOM.checkoutModal.classList.remove('hidden');
+      });
+
+      DOM.checkoutCloseBtn.addEventListener('click', () => DOM.checkoutModal.classList.add('hidden'));
+      DOM.checkoutCancelBtn.addEventListener('click', () => DOM.checkoutModal.classList.add('hidden'));
+      DOM.submitOrderBtn.addEventListener('click', orderManager.submitOrder.bind(orderManager));
+
+      DOM.pickupToggle.addEventListener('click', () => {
+        state.deliveryMethod = 'pickup';
+        DOM.pickupToggle.classList.add('active');
+        DOM.deliveryToggle.classList.remove('active');
+      });
+
+      DOM.deliveryToggle.addEventListener('click', () => {
+        state.deliveryMethod = 'delivery';
+        DOM.deliveryToggle.classList.add('active');
+        DOM.pickupToggle.classList.remove('active');
+      });
+
+      DOM.learnMoreBtn.addEventListener('click', () => {
+        const info = DOM.additionalInfo;
+
+        if (info.classList.contains('animated-show')) {
+          info.classList.remove('animated-show');
+          info.classList.add('animated-hide');
+          info.addEventListener('animationend', () => {
+            info.classList.add('hidden');
+            info.classList.remove('animated-hide');
+          }, { once: true });
+        } else {
+          info.classList.remove('hidden');
+          info.classList.add('animated-show');
+        }
+      });
+
+     
+      DOM.loginBtn.addEventListener('click', () => {
+        DOM.loginModal.classList.remove('hidden');
+      });
+
+      DOM.loginCloseBtn.addEventListener('click', () => {
+        DOM.loginModal.classList.add('hidden');
+        DOM.loginError.classList.add('hidden');
+      });
+
+      DOM.signupCloseBtn.addEventListener('click', () => {
+        DOM.signupModal.classList.add('hidden');
+        DOM.signupError.classList.add('hidden');
+      });
+
+      DOM.switchToSignup.addEventListener('click', () => {
+        DOM.loginModal.classList.add('hidden');
+        DOM.signupModal.classList.remove('hidden');
+        DOM.loginError.classList.add('hidden');
+      });
+
+      DOM.switchToLogin.addEventListener('click', () => {
+        DOM.signupModal.classList.add('hidden');
+        DOM.loginModal.classList.remove('hidden');
+        DOM.signupError.classList.add('hidden');
+      });
+
+      let logoutConfirm = false;
+
+      DOM.logoutBtn.addEventListener('click', () => {
+        if (!logoutConfirm) {
+          document.getElementById('logout-confirm-text').classList.remove('hidden');
+          logoutConfirm = true;
+
+         
+
+          setTimeout(() => {
+            document.getElementById('logout-confirm-text').classList.add('hidden');
+            logoutConfirm = false;
+          }, 5000);
+        } else {
+          authManager.logout();
+          document.getElementById('logout-confirm-text').classList.add('hidden');
+          logoutConfirm = false;
+        }
+      });
+
+      DOM.loginForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const email = DOM.loginEmail.value.trim();
+        const password = DOM.loginPassword.value.trim();
+        if (!utils.validateEmail(email)) {
+          DOM.loginError.classList.remove('hidden');
+          DOM.loginError.textContent = 'Введіть дійсний email.';
+          return;
+        }
+       
+        authManager.login(email, password);
+      });
+
+      DOM.signupForm.addEventListener('submit', e => {
+               e.preventDefault();
+        const email = DOM.signupEmail.value.trim();
+        const password = DOM.signupPassword.value.trim();
+        const confirmPassword = DOM.signupConfirmPassword.value.trim();
+        if (!utils.validateEmail(email)) {
+          DOM.signupError.classList.remove('hidden');
+          DOM.signupError.textContent = 'Введіть дійсний email.';
+          return;
+        }
+        authManager.signup(email, password, confirmPassword);
+      });
+
+      DOM.orderForm.addEventListener('submit', orderManager.submitOrder.bind(orderManager));
+
+      document.getElementById('admin-panel-btn').addEventListener('click', async () => {
+        await menuService.fetchMenuItems();
+        renderAdminList();
+        document.getElementById('admin-panel-modal').classList.remove('hidden');
+      });
+
+      document.getElementById('admin-close-btn').addEventListener('click', () => {
+        document.getElementById('admin-panel-modal').classList.add('hidden');
+        document.getElementById('admin-item-form').reset();
+      });      document.getElementById('admin-item-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const item = {
+          id: document.getElementById('admin-item-id').value || null,
+          name: document.getElementById('admin-item-name').value.trim(),
+          image: document.getElementById('admin-item-image').value.trim(),
+          description: document.getElementById('admin-item-description').value.trim(),
+          price: parseFloat(document.getElementById('admin-item-price').value),
+          category: document.getElementById('admin-item-category').value
+        };
+
+        await menuService.saveMenuItem(item);
+
+        // Очистити форму після збереження
+        e.target.reset();
+        document.getElementById('admin-item-id').value = '';
+      });
+
+
+      if (DOM.forgotPasswordLink) {
+        DOM.forgotPasswordLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          DOM.forgotPasswordModal.classList.remove('hidden');
+          DOM.forgotError.classList.add('hidden');
+          DOM.forgotEmailInput.value = '';
+        });
+      }
+
+      if (DOM.forgotCloseBtn) {
+        DOM.forgotCloseBtn.addEventListener('click', () => {
+          DOM.forgotPasswordModal.classList.add('hidden');
+        });
+      }
+
+      if (DOM.forgotCancelBtn) {
+        DOM.forgotCancelBtn.addEventListener('click', () => {
+          DOM.forgotPasswordModal.classList.add('hidden');
+        });
+      }
+
+      if (DOM.forgotForm) {
+        DOM.forgotForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const email = DOM.forgotEmailInput.value.trim();
+          if (!utils.validateEmail(email)) {
+            DOM.forgotError.textContent = 'Введіть коректний email.';
+            DOM.forgotError.classList.remove('hidden');
+            return;
+          }
+          firebase.sendPasswordResetEmail(firebase.auth, email)
+            .then(() => {
+              DOM.forgotPasswordModal.classList.add('hidden');
+              utils.showAlert('Лист для відновлення пароля надіслано. Перевірте вашу пошту.', 'success');
+            })
+            .catch((error) => {
+              DOM.forgotError.textContent = 'Помилка: ' + error.message;
+              DOM.forgotError.classList.remove('hidden');
+            });
+        });
+      }
+      
+
+      document.getElementById('admin-menu-list').addEventListener('click', async (e) => {
+  const editBtn = e.target.closest('.edit-item');
+  const deleteBtn = e.target.closest('.delete-item');
+
+  if (editBtn) {
+    const id = editBtn.dataset.id;
+    // Ensure item.id is compared as a string.
+    const item = state.menuItems.find(i => i.id.toString() === id);
+    if (item) {
+      // Заповнюємо форму для редагування
+      document.getElementById('admin-item-id').value = item.id;
+      document.getElementById('admin-item-name').value = item.name;
+      document.getElementById('admin-item-image').value = item.image;
+      document.getElementById('admin-item-description').value = item.description;
+      document.getElementById('admin-item-price').value = item.price;
+      document.getElementById('admin-item-category').value = item.category;
+    }
+  }
+
+  if (deleteBtn) {
+    const id = deleteBtn.dataset.id;
+    if (confirm('Ви дійсно хочете видалити цей елемент?')) {
+      await menuService.deleteMenuItem(id);
+    }
+  }
+  
+});
+
+    };
+
+    const initMap = () => {
+      const map = L.map('map').setView([50.5219, 30.2381], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      L.marker([50.52233235, 30.22719930364546])
+        .addTo(map)
+        .bindPopup(`
+      <b>Центральне кафе IFKEP</b><br>вул. Університетська, 31, Ірпінь<br>Відкрито: 7:00 - 20:00<br>
+      <a href="https://www.google.com/maps/place/Державний+податковий+університет" target="_blank" class="text-green-700 hover:underline">Отримати маршрут</a>
+    `);
+
+      L.marker([50.5245575, 30.2198308])
+        .addTo(map)
+        .bindPopup(`
+      <b>Верхнє кафе IFKEP</b><br>вул. Матвія Донцова, 100, Ірпінь<br>Відкрито: 8:00 - 21:00<br>
+      <a href="https://www.google.com/maps/place/вулиця+Матвія+Донцова,+100,+Ірпінь" target="_blank" class="text-green-700 hover:underline">Отримати маршрут</a>
+    `);
+    };
+
+    const init = () => {
+      menuService.listenToMenuChanges();
+      initMap();
+      document.addEventListener("DOMContentLoaded", () => {
+        initEvents();
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      authManager.initAuth();
+      menuService.listenToMenuChanges();
+      initMap();
+      initEvents();
+    });
+
+    function renderAdminList() {
+  const container = document.getElementById('admin-menu-list');
+  container.innerHTML = '';
+
+  state.menuItems.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'p-4 bg-white rounded shadow flex justify-between items-center';
+    el.innerHTML = `
+      <div>
+        <p class="font-bold">${item.name}</p>
+        <p class="text-sm text-gray-600">${item.description}</p>
+        <p class="text-green-700">${item.price} грн</p>
+      </div>
+      <div class="flex space-x-2">
+        <button class="edit-item bg-blue-600 text-white px-2 py-1 rounded" data-id="${item.id}">Редагувати</button>
+        <button class="delete-item bg-red-600 text-white px-2 py-1 rounded" data-id="${item.id}">Видалити</button>
+      </div>
+    `;
+    container.appendChild(el);
+  });
+}
+  // === Password visibility toggles ===
+  document.getElementById('toggle-password-visibility')?.addEventListener('click', () => {
+    const passwordInput = document.getElementById('login-password');
+    const eyeIcon = document.getElementById('eye-icon');
+    const isHidden = passwordInput.type === 'password';
+
+    passwordInput.type = isHidden ? 'text' : 'password';
+    eyeIcon.innerHTML = isHidden
+      ? `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.044 10.044 0 014.11-5.408m1.48-1.051A10.05 10.05 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.957 9.957 0 01-1.334 2.572M15 12a3 3 0 11-6 0 3 3 0 016 0zM3 3l18 18" />`
+      : `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7a9.957 9.957 0 01-1.334 2.572M15 12a3 3 0 01-6 0" />`;
+  });
+
+  document.getElementById('toggle-signup-password')?.addEventListener('click', () => {
+    const passwordInput = document.getElementById('signup-password');
+    const eyeIcon = document.getElementById('signup-eye-icon');
+    const isHidden = passwordInput.type === 'password';
+
+    passwordInput.type = isHidden ? 'text' : 'password';
+    eyeIcon.innerHTML = isHidden
+      ? `<path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.044 10.044 0 014.11-5.408m1.48-1.051A10.05 10.05 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.957 9.957 0 01-1.334 2.572M15 12a3 3 0 11-6 0 3 3 0 016 0zM3 3l18 18\" />`
+      : `<path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 12a3 3 0 11-6 0 3 3 0 016 0z\" /><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7\" />`;
+  });
+
+  // === Checkout time selection logic ===
+const asapBtn = document.getElementById('asap-button');
+const chooseTimeBtn = document.getElementById('choose-time-button');
+const timeSelection = document.getElementById('time-selection');
+let selectedTime = 'asap';
+
+asapBtn?.addEventListener('click', () => {
+  selectedTime = 'asap';
+  asapBtn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+  chooseTimeBtn.classList.remove('bg-green-100', 'border-green-500', 'text-green-800');
+  timeSelection.classList.add('hidden');
+});
+
+chooseTimeBtn?.addEventListener('click', () => {
+  selectedTime = 'custom';
+  chooseTimeBtn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+  asapBtn.classList.remove('bg-green-100', 'border-green-500', 'text-green-800');
+  timeSelection.classList.remove('hidden');
+
+  // Генеруємо опції часу ТУТ, коли елемент вже існує
+  generateTimeOptions();
+});
+
+function generateTimeOptions(start = 9, end = 21, interval = 15) {
+  const select = document.getElementById('time-input');
+  if (!select) return;
+  select.innerHTML = ''; // очищаємо попередні значення
+
+  for (let hour = start; hour < end; hour++) {
+    for (let minute = 0; minute < 60; minute += interval) {
+      const hourStr = hour.toString().padStart(2, '0');
+      const minuteStr = minute.toString().padStart(2, '0');
+      const option = document.createElement('option');
+      option.value = `${hourStr}:${minuteStr}`;
+      option.textContent = `${hourStr}:${minuteStr}`;
+      select.appendChild(option);
+    }
+  }
+}
+  </script>
+</body>
+</html>
