@@ -238,50 +238,81 @@
       opacity: 0;
       max-height: 0;
     }
+
+    /* Mobile menu styles */
+    @media (max-width: 640px) {
+      .sm\\:hidden {
+        display: none !important;
+      }
+      .sm\\:flex {
+        display: flex !important;
+      }
+      #mobile-menu {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: white;
+        border-top: 1px solid #e2e8f0;
+        z-index: 1000;
+      }
+      #mobile-menu a {
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      #mobile-menu a:last-child {
+        border-bottom: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      nav .h-16 {
+        height: 56px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .modal {
+        max-width: 95vw;
+        padding: 1rem;
+      }
+    }
   </style>
 </head>
 <body class="font-sans">
   <nav class="bg-white shadow-md fixed w-full z-[1000]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16">
-        <div class="flex">
-          <div class="flex items-center space-x-2">
-  <a href="#home" class="flex items-center space-x-2">
-    <img class="h-16 w-auto" src="assets/logo.png" alt="Логотип IFKEP">
-  </a>
-</div>
-          <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-            <a href="#home" class="border-b-2 border-transparent hover:border-green-700 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Головна</a>
-            <a href="#full-menu" class="border-b-2 border-transparent hover:border-green-700 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Меню</a>
-            <a href="#about" class="border-b-2 border-transparent hover:border-green-700 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Про нас</a>
-            <a href="#locations" class="border-b-2 border-transparent hover:border-green-700 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Локації</a>
-          </div>
-        </div>
-        <div class="flex items-center space-x-4 ml-auto">
-          <p id="welcome-message" class="text-gray-700 hidden whitespace-nowrap"></p>
-          <button id="cart-btn" class="bg-green-700 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-800 flex items-center" aria-label="Переглянути кошик">
-            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+        <div class="flex items-center space-x-2">
+          <a href="#home" class="flex items-center space-x-2">
+            <img class="w-full h-auto object-cover" src="assets/logo.png" alt="Логотип IFKEP">
+          </a>
+          <button id="mobile-menu-toggle" class="sm:hidden text-gray-700 hover:text-green-700 focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
-            <span>Кошик (<span id="cart-count">0</span>)</span>
           </button>
-          <button id="login-btn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-300">Вхід</button>
-          <button id="admin-panel-btn" class="bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-blue-800 hidden">Адмін панель</button>
-          <button id="profile-btn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-300 hidden" title="Особистий кабінет">
-            <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A11.955 11.955 0 0112 15c2.21 0 4.268.635 5.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            Кабінет
-          </button>
-          <button id="logout-btn" class="bg-red-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-red-700 hidden">Вихід</button>
-          <span id="logout-confirm-text" class="text-red-600 font-medium ml-2 hidden">Ви дійсно бажаєте вийти?</span>
         </div>
+        <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+          <a href="#home" class="border-b-2 border-transparent hover:border-green-700 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Головна</a>
+          <a href="#full-menu" class="border-b-2 border-transparent hover:border-green-700 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Меню</a>
+          <a href="#about" class="border-b-2 border-transparent hover:border-green-700 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Про нас</a>
+          <a href="#locations" class="border-b-2 border-transparent hover:border-green-700 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Локації</a>
+        </div>
+      </div>
+      <div id="mobile-menu" class="sm:hidden hidden flex-col space-y-2 pt-4">
+        <a href="#home" class="block text-gray-900 hover:text-green-700">Головна</a>
+        <a href="#full-menu" class="block text-gray-900 hover:text-green-700">Меню</a>
+        <a href="#about" class="block text-gray-900 hover:text-green-700">Про нас</a>
+        <a href="#locations" class="block text-gray-900 hover:text-green-700">Локації</a>
       </div>
     </div>
   </nav>
 
   <section id="home" class="pt-16">
-    <div class="relative bg-cover bg-center h-[600px]" style="background-image: url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')">
+    <div class="relative bg-cover bg-center h-[600px] sm:h-[500px] md:h-[600px]" style="background-image: url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')">
       <div class="absolute inset-0 bg-black opacity-50"></div>
       <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
         <div class="text-center text-white">
@@ -297,24 +328,24 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <h2 class="text-3xl font-bold text-center text-gray-900 mb-8">Моменти в IFKEP Coffee</h2>
       <p class="text-lg text-center text-gray-600 mb-12">Відкрийте для себе тепло, смаки та атмосферу, які роблять IFKEP Coffee особливим.</p>
-      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div class="gallery-item">
-          <img src="assets/intu.png" alt="Затишна кав’ярня" loading="lazy">
+          <img class="w-full h-auto object-cover" src="assets/intu.png" alt="Затишна кав’ярня" loading="lazy">
         </div>
         <div class="gallery-item">
-          <img src="assets/coffeepour.png" alt="Інтер’єр кав’ярні" loading="lazy">
+          <img class="w-full h-auto object-cover" src="assets/coffeepour.png" alt="Інтер’єр кав’ярні" loading="lazy">
         </div>
         <div class="gallery-item">
-          <img src="assets/coffeeplants.png" alt="Рослини в кав’ярні" loading="lazy">
+          <img class="w-full h-auto object-cover" src="assets/coffeeplants.png" alt="Рослини в кав’ярні" loading="lazy">
         </div>
         <div class="gallery-item">
-          <img src="assets/coffeebar.png" alt="Бар кав’ярні" loading="lazy">
+          <img class="w-full h-auto object-cover" src="assets/coffeebar.png" alt="Бар кав’ярні" loading="lazy">
         </div>
         <div class="gallery-item">
-          <img src="assets/coffeeint.png" alt="Інтер’єр кав’ярні" loading="lazy">
+          <img class="w-full h-auto object-cover" src="assets/coffeeint.png" alt="Інтер’єр кав’ярні" loading="lazy">
         </div>
         <div class="gallery-item">
-          <img src="assets/coffeekitchen.png" alt="Бариста за роботою" loading="lazy">
+          <img class="w-full h-auto object-cover" src="assets/coffeekitchen.png" alt="Бариста за роботою" loading="lazy">
         </div>
       </div>
     </div>
@@ -360,7 +391,7 @@
           </div>
         </div>
         <div>
-          <img class="w-full rounded-lg shadow-md" src="assets/interier.jpg" alt="Інтер’єр кав’ярні" loading="lazy">
+          <img class="w-full h-auto object-cover rounded-lg shadow-md" src="assets/interier.jpg" alt="Інтер’єр кав’ярні" loading="lazy">
         </div>
       </div>
     </div>
@@ -387,7 +418,7 @@
       <form id="login-form">
         <div class="mb-4">
           <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
-          <input type="email" id="login-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваш email" required>
+          <input type="email" id="login-email" class="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваш email" required>
         </div>
         <div class="relative">
           <input type="password" id="login-password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 pr-10 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваш пароль" required>
@@ -404,7 +435,7 @@
         <p id="login-error" class="text-red-600 text-sm hidden"></p>
         <div class="mt-6 flex justify-end space-x-4">
           <button type="button" id="switch-to-signup" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300">Реєстрація</button>
-          <button type="submit" class="px-4 py-2 bg-green-700 text-white rounded-full hover:bg-green-800">Увійти</button>
+          <button type="submit" class="w-full px-4 py-2 bg-green-700 text-white rounded-full hover:bg-green-800">Увійти</button>
         </div>
       </form>
     </div>
@@ -421,7 +452,7 @@
       <form id="signup-form">
         <div class="mb-4">
           <label for="signup-email" class="block text-sm font-medium text-gray-700">Email</label>
-          <input type="email" id="signup-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваш email" required>
+          <input type="email" id="signup-email" class="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваш email" required>
         </div>
         <!-- Заміна поля пароля -->
         <div class="mb-4">
@@ -443,7 +474,7 @@
         <p id="signup-error" class="text-red-600 text-sm hidden"></p>
         <div class="mt-6 flex justify-end space-x-4">
           <button type="button" id="switch-to-login" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300">Вхід</button>
-          <button type="submit" class="px-4 py-2 bg-green-700 text-white rounded-full hover:bg-green-800">Зареєструватися</button>
+          <button type="submit" class="w-full px-4 py-2 bg-green-700 text-white rounded-full hover:bg-green-800">Зареєструватися</button>
         </div>
       </form>
     </div>
@@ -1085,7 +1116,7 @@
             const menuItem = document.createElement('div');
             menuItem.className = 'menu-item bg-white rounded-lg shadow-md overflow-hidden';
             menuItem.innerHTML = `
-              <img class="w-full h-48 object-cover" src="${item.image}" alt="${item.name}" loading="lazy">
+              <img class="w-full h-auto object-cover" src="${item.image}" alt="${item.name}" loading="lazy">
               <div class="p-6">
                 <h3 class="text-xl font-semibold text-gray-900">${item.name}</h3>
                 <p class="mt-2 text-gray-600">${item.description}</p>
@@ -1334,7 +1365,7 @@
                 </div>
               `;
               orderList.appendChild(el);
-            });
+                       });
           }
         } catch (error) {
           orderList.innerHTML = `<p class="text-red-500">Помилка: ${error.message}</p>`;
@@ -1677,7 +1708,7 @@
     passwordInput.type = isHidden ? 'text' : 'password';
     eyeIcon.innerHTML = isHidden
       ? `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.044 10.044 0 014.11-5.408m1.48-1.051A10.05 10.05 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.957 9.957 0 01-1.334 2.572M15 12a3 3 0 11-6 0 3 3 0 016 0zM3 3l18 18" />`
-      : `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7a9.957 9.957 0 01-1.334 2.572M15 12a3 3 0 01-6 0" />`;
+      : `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7a9.957 9.957 0 01-1.334 2.572M15 12a3 3 0 01-6 0" />`;
   });
 
   document.getElementById('toggle-signup-password')?.addEventListener('click', () => {
@@ -1730,6 +1761,11 @@ function generateTimeOptions(start = 9, end = 21, interval = 15) {
     }
   }
 }
+
+document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+  const menu = document.getElementById('mobile-menu');
+  menu.classList.toggle('hidden');
+});
   </script>
 </body>
 </html>
