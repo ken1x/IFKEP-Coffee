@@ -64,8 +64,8 @@
       max-width: 500px;
       width: 100%;
       position: relative;
-      max-height: 90vh; /* обмеження по висоті */
-      overflow-y: auto;  /* прокрутка */
+      max-height: 90vh; 
+      overflow-y: auto;  
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: scale(0.95); }
@@ -174,11 +174,10 @@
       to {
         opacity: 1;
         transform: translateY(0);
-        max-height: 500px; /* Адаптуйте під ваш контент */
+        max-height: 500px;
       }
     }
 
-    /* Додаємо нову анімацію slideUp */
     @keyframes slideUp {
       from {
         opacity: 1;
@@ -207,7 +206,7 @@
       max-height: 500px;
     }
     
-    /* Додаємо правило для закриття з новою анімацією */
+
     #order-history.hide {
       animation: slideUp 0.5s ease-in-out forwards;
       opacity: 0;
@@ -215,7 +214,7 @@
     }
     
     .hidden {
-      display: none !important; /* Додаємо пріоритет */
+      display: none !important; 
     }
     
     @keyframes fadeIn {
@@ -324,31 +323,49 @@
     justify-content: space-between;
   }
 }
-  /* Fix for Leaflet map elements to avoid overlapping navigation */
+ 
   .leaflet-control-container .leaflet-top,
   .leaflet-control-container .leaflet-bottom {
-    z-index: 800 !important; /* Less than navigation z-[1000] */
+    z-index: 800 !important; 
   }
 
-  /* Increase z-index for navigation */
+
   nav.bg-white {
-    z-index: 1200 !important; /* Higher than Leaflet elements */
+    z-index: 1200 !important; 
   }
 
-  /* Additional z-index for mobile menu */
+
   #mobile-menu {
     z-index: 1100 !important;
   }
 
-  /* Create a new stacking context for the map */
+
   #map {
     isolation: isolate;
     position: relative;
-    z-index: 100; /* Lower than navigation */
+    z-index: 100; 
   }
 
   .logo-image {
     transition: height 0.3s ease-in-out;
+  }
+
+  .desktop-logo {
+    display: none; 
+  }
+  
+  .mobile-logo {
+    display: block; 
+  }
+  
+  @media (min-width: 768px) {
+    .desktop-logo {
+      display: block;
+    }
+    
+    .mobile-logo {
+      display: none; 
+    }
   }
   </style>
 </head>
@@ -359,8 +376,9 @@
         <div class="flex">
           <div class="flex items-center space-x-2">
   <a href="#home" class="flex items-center space-x-2">
-    <!-- Adaptive logo with smooth size transition -->
-    <img class="logo-image h-10 sm:h-12 md:h-16 w-auto" src="assets/logo.png" alt="Логотип IFKEP">
+    <img class="desktop-logo h-16 w-auto" src="assets/logo.png" alt="Логотип IFKEP">
+    
+    <img class="mobile-logo h-14 w-auto" src="assets/logo-mobile.png" alt="Логотип IFKEP">
   </a>
 </div>
           <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -536,7 +554,6 @@
           <label for="signup-email" class="block text-sm font-medium text-gray-700">Email</label>
           <input type="email" id="signup-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-green-700 focus:border-green-700" placeholder="Введіть ваш email" required>
         </div>
-        <!-- Заміна поля пароля -->
         <div class="mb-4">
           <label for="signup-password" class="block text-sm font-medium text-gray-700">Пароль</label>
           <div class="relative">
@@ -747,7 +764,6 @@
     </div>
   </div>
 
-  <!-- Модальне вікно Особистого Кабінету -->
   <div id="profile-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1000]">
     <div class="modal max-w-lg w-full">
       <button id="profile-close-btn" class="modal-close-btn" aria-label="Закрити">
@@ -938,7 +954,6 @@
     const menuService = {
       async fetchMenuItems() {
         const snapshot = await getDocs(collection(firebase.db, 'menuItems'));
-        // Ensure each menu item contains a unique id taken from doc.id
         state.menuItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         utils.updateItemImageMap();
         menu.renderItems();
@@ -1125,7 +1140,6 @@
           const dateStr = now.toISOString().replace(/[:.]/g, '-');
           const orderId = `order-${dateStr}`;
           
-          // --- Формування orderDetails ---
           let orderDetails = {
             userId: state.user.uid,
             firstName, 
@@ -1138,7 +1152,6 @@
             createdAt: firebase.serverTimestamp(),
           };
 
-          // === Додаємо тип часу та деталі часу ===
           orderDetails.deliveryTimeType = selectedTime;
           if (selectedTime === 'custom') {
             orderDetails.date = document.getElementById('date-select').value;
@@ -1342,6 +1355,8 @@
         const customerName = utils.sanitizeInput(DOM.customerName.value.trim());
         const customerPhone = utils.sanitizeInput(DOM.customerPhone.value.trim());
 
+
+
         if (!customerName || !customerPhone) {
           utils.showAlert('Будь ласка, введіть ім’я, прізвище та номер телефону.');
           return;
@@ -1412,7 +1427,6 @@
       if (!orderHistory || !orderList) return;
       const isVisible = orderHistory.classList.contains('show');
       if (isVisible) {
-        // Запуск анімації закриття
         orderHistory.classList.add('hide');
         orderHistory.classList.remove('show');
         orderHistory.addEventListener('animationend', () => {
@@ -1420,7 +1434,6 @@
           orderHistory.classList.remove('hide');
         }, { once: true });
       } else {
-        // Видаляємо hidden та запускаємо анімацію відкриття
         orderHistory.classList.remove('hidden');
         orderHistory.classList.add('show');
         orderList.innerHTML = '<p>Завантаження...</p>';
@@ -1457,7 +1470,6 @@
       }
     });
 
-    // Toggle profile button visibility based on authentication state
     firebase.onAuthStateChanged(firebase.auth, (user) => {
       profileBtn.classList.toggle('hidden', !user);
     });
@@ -1647,7 +1659,6 @@
 
         await menuService.saveMenuItem(item);
 
-        // Очистити форму після збереження
         e.target.reset();
         document.getElementById('admin-item-id').value = '';
       });
@@ -1702,10 +1713,8 @@
 
   if (editBtn) {
     const id = editBtn.dataset.id;
-    // Ensure item.id is compared as a string.
     const item = state.menuItems.find(i => i.id.toString() === id);
     if (item) {
-      // Заповнюємо форму для редагування
       document.getElementById('admin-item-id').value = item.id;
       document.getElementById('admin-item-name').value = item.name;
       document.getElementById('admin-item-image').value = item.image;
@@ -1790,7 +1799,6 @@
     container.appendChild(el);
   });
 }
-  // === Password visibility toggles ===
   document.getElementById('toggle-password-visibility')?.addEventListener('click', () => {
     const passwordInput = document.getElementById('login-password');
     const eyeIcon = document.getElementById('eye-icon');
@@ -1813,7 +1821,6 @@
       : `<path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 12a3 3 0 11-6 0 3 3 0 016 0z\" /><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7\" />`;
   });
 
-  // === Checkout time selection logic ===
 const asapBtn = document.getElementById('asap-button');
 const chooseTimeBtn = document.getElementById('choose-time-button');
 const timeSelection = document.getElementById('time-selection');
@@ -1832,14 +1839,13 @@ chooseTimeBtn?.addEventListener('click', () => {
   asapBtn.classList.remove('bg-green-100', 'border-green-500', 'text-green-800');
   timeSelection.classList.remove('hidden');
 
-  // Генеруємо опції часу ТУТ, коли елемент вже існує
   generateTimeOptions();
 });
 
 function generateTimeOptions(start = 9, end = 21, interval = 15) {
   const select = document.getElementById('time-input');
   if (!select) return;
-  select.innerHTML = ''; // очищаємо попередні значення
+  select.innerHTML = ''; 
 
   for (let hour = start; hour < end; hour++) {
     for (let minute = 0; minute < 60; minute += interval) {
@@ -1854,7 +1860,6 @@ function generateTimeOptions(start = 9, end = 21, interval = 15) {
 }
   </script>
   <script>
-  // Mobile menu functionality
   const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
   const mobileMenu = document.getElementById('mobile-menu');
 
@@ -1864,7 +1869,6 @@ function generateTimeOptions(start = 9, end = 21, interval = 15) {
     mobileMenu.classList.toggle('hidden');
   });
 
-  // Close mobile menu when clicking on links
   document.querySelectorAll('#mobile-menu a').forEach(link => {
     link.addEventListener('click', () => {
       mobileMenu.classList.add('hidden');
@@ -1875,20 +1879,17 @@ function generateTimeOptions(start = 9, end = 21, interval = 15) {
   function adjustForMobile() {
     const isMobile = window.innerWidth < 768;
 
-    // Адаптація висоти заголовку на мобільних
     const heroSection = document.querySelector('#home .relative');
     if (heroSection) {
       heroSection.style.height = isMobile ? '400px' : '600px';
     }
 
-    // Адаптація розміру карти
     const map = document.getElementById('map');
     if (map) {
       map.style.height = isMobile ? '300px' : '500px';
     }
   }
 
-  // Викликати функцію при завантаженні та при зміні розміру вікна
   window.addEventListener('load', adjustForMobile);
   window.addEventListener('resize', adjustForMobile);
 </script>
