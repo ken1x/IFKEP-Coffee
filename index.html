@@ -324,6 +324,32 @@
     justify-content: space-between;
   }
 }
+  /* Fix for Leaflet map elements to avoid overlapping navigation */
+  .leaflet-control-container .leaflet-top,
+  .leaflet-control-container .leaflet-bottom {
+    z-index: 800 !important; /* Less than navigation z-[1000] */
+  }
+
+  /* Increase z-index for navigation */
+  nav.bg-white {
+    z-index: 1200 !important; /* Higher than Leaflet elements */
+  }
+
+  /* Additional z-index for mobile menu */
+  #mobile-menu {
+    z-index: 1100 !important;
+  }
+
+  /* Create a new stacking context for the map */
+  #map {
+    isolation: isolate;
+    position: relative;
+    z-index: 100; /* Lower than navigation */
+  }
+
+  .logo-image {
+    transition: height 0.3s ease-in-out;
+  }
   </style>
 </head>
 <body class="font-sans">
@@ -333,7 +359,8 @@
         <div class="flex">
           <div class="flex items-center space-x-2">
   <a href="#home" class="flex items-center space-x-2">
-    <img class="h-16 w-auto" src="assets/logo.png" alt="Логотип IFKEP">
+    <!-- Adaptive logo with smooth size transition -->
+    <img class="logo-image h-10 sm:h-12 md:h-16 w-auto" src="assets/logo.png" alt="Логотип IFKEP">
   </a>
 </div>
           <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -1718,6 +1745,13 @@
       <b>Верхнє кафе IFKEP</b><br>вул. Матвія Донцова, 100, Ірпінь<br>Відкрито: 8:00 - 21:00<br>
       <a href="https://www.google.com/maps/place/вулиця+Матвія+Донцова,+100,+Ірпінь" target="_blank" class="text-green-700 hover:underline">Отримати маршрут</a>
     `);
+
+      // Fix z-index for Leaflet elements
+    setTimeout(() => {
+      document.querySelectorAll('.leaflet-control-container .leaflet-top, .leaflet-control-container .leaflet-bottom').forEach(el => {
+        el.style.zIndex = "800";
+      });
+    }, 500);
     };
 
     const init = () => {
@@ -1765,7 +1799,7 @@
     passwordInput.type = isHidden ? 'text' : 'password';
     eyeIcon.innerHTML = isHidden
       ? `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.044 10.044 0 014.11-5.408m1.48-1.051A10.05 10.05 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.957 9.957 0 01-1.334 2.572M15 12a3 3 0 11-6 0 3 3 0 016 0zM3 3l18 18" />`
-      : `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7a9.957 9.957 0 01-1.334 2.572M15 12a3 3 0 01-6 0" />`;
+      : `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7a9.957 9.957 0 01-1.334 2.572M15 12a3 3 0 01-6 0" />`;
   });
 
   document.getElementById('toggle-signup-password')?.addEventListener('click', () => {
