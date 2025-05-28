@@ -238,6 +238,92 @@
       opacity: 0;
       max-height: 0;
     }
+
+    /* Mobile menu styles */
+    .mobile-menu-btn {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .mobile-menu-btn {
+        display: flex;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 1001;
+      }
+
+      #mobile-menu {
+        position: absolute;
+        top: 4rem;
+        left: 0;
+        right: 0;
+        background-color: white;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+      }
+
+      #mobile-menu a {
+        display: block;
+        padding: 1rem;
+        color: #4a5568;
+        text-decoration: none;
+      }
+
+      #mobile-menu a:hover {
+        background-color: #edf2f7;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .auth-buttons {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: space-around;
+        background-color: white;
+        padding: 0.5rem;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 50;
+      }
+
+      .auth-buttons button {
+        font-size: 0.75rem;
+        padding: 0.5rem;
+      }
+
+      .modal {
+        width: 90%;
+        padding: 1.5rem;
+        margin: 0 auto;
+      }
+
+      .gallery-item img {
+        height: 200px;
+      }
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      
+    }
+    @media (max-width: 640px) {
+  .cart-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .cart-item-controls {
+    margin-top: 0.5rem;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+}
   </style>
 </head>
 <body class="font-sans">
@@ -1157,23 +1243,21 @@
         state.cart.forEach((item, index) => {
           const itemTotal = item.price * item.quantity;
           total += itemTotal;
-          itemCount += item.quantity;
-
           const cartItem = document.createElement('div');
-          cartItem.className = 'flex justify-between items-center border-b py-2';
+          cartItem.className = 'cart-item flex flex-col sm:flex-row justify-between items-start sm:items-center border-b py-2';
           cartItem.innerHTML = `
-            <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-3 w-full sm:w-auto mb-2 sm:mb-0">
               <img src="${state.itemImageMap[item.name] || 'https://via.placeholder.com/40'}" alt="${item.name}" class="cart-item-img">
               <div>
                 <p class="font-medium text-gray-900">${item.name}</p>
                 <p class="text-gray-600">${item.price} грн x ${item.quantity} = ${itemTotal} грн</p>
               </div>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
               <button class="decrease-qty px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" data-index="${index}">-</button>
               <span>${item.quantity}</span>
               <button class="increase-qty px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" data-index="${index}">+</button>
-              <button class="remove-item text-red-600 hover:text-red-800" data-index="${index}">
+              <button class="remove-item text-red-600 hover:text-red-800 ml-2" data-index="${index}">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4M4 7h16"></path>
                 </svg>
@@ -1265,6 +1349,8 @@
           };
         }
 
+
+
         console.log('Замовлення:', orderDetails);
         utils.showAlert('Замовлення успішно розміщено!');
         state.cart = [];
@@ -1282,6 +1368,8 @@
     const orderHistoryBtn = document.getElementById('order-history-btn');
     const orderHistory = document.getElementById('order-history');
     const orderList = document.getElementById('order-list');
+
+
 
     profileBtn.addEventListener('click', () => {
       profileEmail.textContent = firebase.auth.currentUser?.email || '';
@@ -1731,5 +1819,44 @@ function generateTimeOptions(start = 9, end = 21, interval = 15) {
   }
 }
   </script>
+  <script>
+  // Mobile menu functionality
+  const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  mobileMenuBtn?.addEventListener('click', () => {
+    const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+    mobileMenuBtn.setAttribute('aria-expanded', !isExpanded);
+    mobileMenu.classList.toggle('hidden');
+  });
+
+  // Close mobile menu when clicking on links
+  document.querySelectorAll('#mobile-menu a').forEach(link => {
+    link.addEventListener('click', () => {
+      mobileMenu.classList.add('hidden');
+      mobileMenuBtn.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  function adjustForMobile() {
+    const isMobile = window.innerWidth < 768;
+
+    // Адаптація висоти заголовку на мобільних
+    const heroSection = document.querySelector('#home .relative');
+    if (heroSection) {
+      heroSection.style.height = isMobile ? '400px' : '600px';
+    }
+
+    // Адаптація розміру карти
+    const map = document.getElementById('map');
+    if (map) {
+      map.style.height = isMobile ? '300px' : '500px';
+    }
+  }
+
+  // Викликати функцію при завантаженні та при зміні розміру вікна
+  window.addEventListener('load', adjustForMobile);
+  window.addEventListener('resize', adjustForMobile);
+</script>
 </body>
 </html>
