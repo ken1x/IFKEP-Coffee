@@ -1270,19 +1270,15 @@
       },
       updateUI() {
         const hasItems = state.cart.length > 0;
-        const userLoggedIn = !!state.user;
-        console.log('Updating cart UI', { hasItems, userLoggedIn, cart: state.cart });
-
-        DOM.cartItemsContainer.innerHTML = hasItems
-          ? ''
-          : '<p class="text-gray-600">Ваш кошик порожній.</p>';
-
+        DOM.cartItemsContainer.innerHTML = hasItems ? '' : '<p class="text-gray-600">Ваш кошик порожній.</p>';
         let total = 0;
-        let itemCount = 0;
+        let itemCount = 0; // Total quantity of items
 
         state.cart.forEach((item, index) => {
           const itemTotal = item.price * item.quantity;
           total += itemTotal;
+          itemCount += item.quantity; // Correctly count item quantities
+
           const cartItem = document.createElement('div');
           cartItem.className = 'cart-item flex flex-col sm:flex-row justify-between items-start sm:items-center border-b py-2';
           cartItem.innerHTML = `
@@ -1308,11 +1304,11 @@
         });
 
         DOM.cartTotalElement.textContent = total.toFixed(2);
-        DOM.cartCountElement.textContent = itemCount;
+        DOM.cartCountElement.textContent = itemCount; // Display correct item count
         DOM.cartCountElement.classList.add('updated');
         setTimeout(() => DOM.cartCountElement.classList.remove('updated'), 200);
 
-        DOM.checkoutBtn.disabled = !(hasItems && userLoggedIn);
+        DOM.checkoutBtn.disabled = !(hasItems && !!state.user);
       },
       updateCheckoutUI() {
         console.log('Updating checkout UI', { deliveryMethod: state.deliveryMethod, cart: state.cart });
