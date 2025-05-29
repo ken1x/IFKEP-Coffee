@@ -9,6 +9,36 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
+:root {
+  --header-z: 100;
+  --modal-backdrop-z: 10000;
+  --modal-content-z: 10001;
+}
+
+nav.bg-white {
+  position: fixed;
+  width: 100%;
+  z-index: var(--header-z) !important;
+}
+
+#cart-modal, #checkout-modal, #login-modal, #signup-modal, #admin-panel-modal, #profile-modal, #forgot-password-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--modal-backdrop-z);
+}
+
+#cart-modal, #checkout-modal {
+  z-index: calc(var(--modal-backdrop-z) + 100);
+}
+
+.modal {
+  position: relative;
+  z-index: var(--modal-content-z);
+}
+
     :root {
       --green-700: #38a169;
       --green-800: #2f855a;
@@ -580,7 +610,7 @@
   </div>
 
   <!-- Cart Modal -->
-  <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1000]" role="dialog" aria-labelledby="cart-modal-title">
+  <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1010]" role="dialog" aria-labelledby="cart-modal-title">
     <div class="modal">
       <button id="cart-close-btn" class="modal-close-btn" aria-label="Закрити модальне вікно кошика">
         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -603,7 +633,8 @@
     </div>
   </div>
 
-  <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1000]" role="dialog" aria-labelledby="checkout-modal-title">
+  <!-- Checkout Modal -->
+  <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1020]" role="dialog" aria-labelledby="checkout-modal-title">
     <div class="modal">
       <button id="checkout-close-btn" class="modal-close-btn" aria-label="Закрити модальне вікно оформлення">
         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1272,12 +1303,12 @@
         const hasItems = state.cart.length > 0;
         DOM.cartItemsContainer.innerHTML = hasItems ? '' : '<p class="text-gray-600">Ваш кошик порожній.</p>';
         let total = 0;
-        let itemCount = 0; // Total quantity of items
+        let itemCount = 0; 
 
         state.cart.forEach((item, index) => {
           const itemTotal = item.price * item.quantity;
           total += itemTotal;
-          itemCount += item.quantity; // Correctly count item quantities
+          itemCount += item.quantity; 
 
           const cartItem = document.createElement('div');
           cartItem.className = 'cart-item flex flex-col sm:flex-row justify-between items-start sm:items-center border-b py-2';
@@ -1304,7 +1335,7 @@
         });
 
         DOM.cartTotalElement.textContent = total.toFixed(2);
-        DOM.cartCountElement.textContent = itemCount; // Display correct item count
+        DOM.cartCountElement.textContent = itemCount; 
         DOM.cartCountElement.classList.add('updated');
         setTimeout(() => DOM.cartCountElement.classList.remove('updated'), 200);
 
