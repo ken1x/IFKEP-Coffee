@@ -397,6 +397,29 @@ nav.bg-white {
       display: none; 
     }
   }
+  #mobile-menu {
+    transition: all 0.3s ease;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 99;
+  }
+
+  #mobile-menu.hidden {
+    display: none;
+  }
+
+  #mobile-menu-button {
+    transition: background-color 0.3s;
+  }
+
+  #mobile-menu-button svg {
+    transition: transform 0.3s;
+  }
+
+  #mobile-menu-button:focus svg {
+    transform: rotate(90deg);
+  }
   </style>
 </head>
 <body class="font-sans">
@@ -437,6 +460,15 @@ nav.bg-white {
           <button id="logout-btn" class="bg-red-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-red-700 hidden">Вихід</button>
           <span id="logout-confirm-text" class="text-red-600 font-medium ml-2 hidden">Ви дійсно бажаєте вийти?</span>
         </div>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="sm:hidden bg-white shadow-md absolute w-full hidden">
+      <div class="px-2 pt-2 pb-3 space-y-1">
+        <a href="#home" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100">Головна</a>
+        <a href="#full-menu" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100">Меню</a>
+        <a href="#about" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100">Про нас</a>
+        <a href="#locations" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100">Локації</a>
       </div>
     </div>
   </nav>
