@@ -420,6 +420,36 @@ nav.bg-white {
   #mobile-menu-button:focus svg {
     transform: rotate(90deg);
   }
+
+  @media (max-width: 640px) {
+    .mobile-menu-btn {
+      position: absolute;
+      right: 1rem;
+      top: 1.25rem;
+      z-index: 1200;
+    }
+    
+    #mobile-menu {
+      position: absolute;
+      top: 4rem;
+      left: 0;
+      right: 0;
+      background: white;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border-top: 1px solid #e5e7eb;
+      z-index: 1100;
+    }
+    
+    #mobile-menu a {
+      display: block;
+      padding: 1rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    #mobile-menu a:last-child {
+      border-bottom: none;
+    }
+  }
   </style>
 </head>
 <body class="font-sans">
@@ -1919,38 +1949,63 @@ function generateTimeOptions(start = 9, end = 21, interval = 15) {
 }
   </script>
   <script>
-  const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-  const mobileMenu = document.getElementById('mobile-menu');
-
-  mobileMenuBtn?.addEventListener('click', () => {
-    const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
-    mobileMenuBtn.setAttribute('aria-expanded', !isExpanded);
-    mobileMenu.classList.toggle('hidden');
-  });
-
-  document.querySelectorAll('#mobile-menu a').forEach(link => {
-    link.addEventListener('click', () => {
-      mobileMenu.classList.add('hidden');
-      mobileMenuBtn.setAttribute('aria-expanded', 'false');
-    });
-  });
-
-  function adjustForMobile() {
-    const isMobile = window.innerWidth < 768;
-
-    const heroSection = document.querySelector('#home .relative');
-    if (heroSection) {
-      heroSection.style.height = isMobile ? '400px' : '600px';
+  document.addEventListener('DOMContentLoaded', () => {
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    if (mobileMenuButton && mobileMenu) {
+      mobileMenuButton.addEventListener('click', () => {
+        const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+        mobileMenuButton.setAttribute('aria-expanded', String(!isExpanded));
+        
+        mobileMenu.classList.toggle('hidden');
+        
+        const menuIcon = mobileMenuButton.querySelector('svg.block');
+        const closeIcon = mobileMenuButton.querySelector('svg.hidden');
+        
+        if (menuIcon && closeIcon) {
+          menuIcon.classList.toggle('hidden');
+          menuIcon.classList.toggle('block');
+          closeIcon.classList.toggle('hidden');
+          closeIcon.classList.toggle('block');
+        }
+      });
+      
+      mobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          mobileMenu.classList.add('hidden');
+          mobileMenuButton.setAttribute('aria-expanded', 'false');
+          
+          const menuIcon = mobileMenuButton.querySelector('svg:first-child');
+          const closeIcon = mobileMenuButton.querySelector('svg:last-child');
+          
+          if (menuIcon && closeIcon) {
+            menuIcon.classList.remove('hidden');
+            menuIcon.classList.add('block');
+            closeIcon.classList.add('hidden');
+            closeIcon.classList.remove('block');
+          }
+        });
+      });
     }
-
-    const map = document.getElementById('map');
-    if (map) {
-      map.style.height = isMobile ? '300px' : '500px';
+    
+    function adjustForMobile() {
+      const isMobile = window.innerWidth < 768;
+      
+      const heroSection = document.querySelector('#home .relative');
+      if (heroSection) {
+        heroSection.style.height = isMobile ? '400px' : '600px';
+      }
+      
+      const map = document.getElementById('map');
+      if (map) {
+        map.style.height = isMobile ? '300px' : '500px';
+      }
     }
-  }
-
-  window.addEventListener('load', adjustForMobile);
-  window.addEventListener('resize', adjustForMobile);
+    
+    adjustForMobile();
+    window.addEventListener('resize', adjustForMobile);
+  });
 </script>
 </body>
 </html>
