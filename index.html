@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Кав'ярня IFKEP</title>
   <link rel="icon" type="image/png" href="assets/favicon.png">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.min.js"></script>
+  <script defer src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="styles.css"></noscript>
   <style>
 :root {
   --header-z: 100;
@@ -37,6 +39,10 @@ nav.bg-white {
 .modal {
   position: relative;
   z-index: var(--modal-content-z);
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  min-height: 200px;
 }
 
     :root {
@@ -337,6 +343,7 @@ nav.bg-white {
     .gallery-item img {
       width: 100%;
       height: 250px;
+      aspect-ratio: 4/3;
       object-fit: cover;
       
     }
@@ -522,22 +529,22 @@ nav.bg-white {
       <p class="text-lg text-center text-gray-600 mb-12">Відкрийте для себе тепло, смаки та атмосферу, які роблять IFKEP Coffee особливим.</p>
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div class="gallery-item">
-          <img src="assets/intu.png" alt="Затишна кав’ярня" loading="lazy">
+          <img src="assets/placeholder.jpg" data-src="assets/intu.png" alt="Затишна кав’ярня" width="400" height="300" loading="lazy" class="lazy">
         </div>
         <div class="gallery-item">
-          <img src="assets/coffeepour.png" alt="Інтер’єр кав’ярні" loading="lazy">
+          <img src="assets/placeholder.jpg" data-src="assets/coffeepour.png" loading="lazy" class="lazy" alt="Інтер’єр кав’ярні">
         </div>
         <div class="gallery-item">
-          <img src="assets/coffeeplants.png" alt="Рослини в кав’ярні" loading="lazy">
+          <img src="assets/placeholder.jpg" data-src="assets/coffeeplants.png" loading="lazy" class="lazy" alt="Рослини в кав’ярні">
         </div>
         <div class="gallery-item">
-          <img src="assets/coffeebar.png" alt="Бар кав’ярні" loading="lazy">
+          <img src="assets/placeholder.jpg" data-src="assets/coffeebar.png" loading="lazy" class="lazy" alt="Бар кав’ярні">
         </div>
         <div class="gallery-item">
-          <img src="assets/coffeeint.png" alt="Інтер’єр кав’ярні" loading="lazy">
+          <img src="assets/placeholder.jpg" data-src="assets/coffeeint.png" loading="lazy" class="lazy" alt="Інтер’єр кав’ярні">
         </div>
         <div class="gallery-item">
-          <img src="assets/coffeekitchen.png" alt="Бариста за роботою" loading="lazy">
+          <img src="assets/placeholder.jpg" data-src="assets/coffeekitchen.png" loading="lazy" class="lazy" alt="Бариста за роботою">
         </div>
       </div>
     </div>
@@ -876,8 +883,13 @@ nav.bg-white {
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="script.js"></script>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+    import("https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js").then((module) => {
+  const firebase = module.initializeApp(firebaseConfig);
+  // Rest of your firebase code
+});
+
     import {
       getAuth,
       createUserWithEmailAndPassword,
@@ -1833,7 +1845,7 @@ nav.bg-white {
       L.marker([50.52233235, 30.22719930364546])
         .addTo(map)
         .bindPopup(`
-      <b>Центральне кафе IFKEP</b><br>вул. Університетська, 31, Ірпінь<br>Відкрито: 8:00 - 21:00<br>
+      <b>Центральне кафе IFKEP</b><br>вул. Університетська, 31, Ірпінь<br>Відкрито: 7:00 - 20:00<br>
       <a href="https://www.google.com/maps/place/Державний+податковий+університет" target="_blank" class="text-green-700 hover:underline">Отримати маршрут</a>
     `);
 
@@ -2005,6 +2017,40 @@ function generateTimeOptions(start = 9, end = 21, interval = 15) {
     
     adjustForMobile();
     window.addEventListener('resize', adjustForMobile);
+  });
+</script>
+<script>
+  const canUseWebP = () => {
+    const elem = document.createElement('canvas');
+    return elem.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+  };
+  
+  if (canUseWebP()) {
+    document.querySelectorAll('img[data-webp]').forEach(img => {
+      img.src = img.getAttribute('data-webp');
+    });
+  }
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    let lazyImages = [].slice.call(document.querySelectorAll("img.lazy"));
+    
+    if ("IntersectionObserver" in window) {
+      let lazyImageObserver = new IntersectionObserver(function(entries, observer) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            let lazyImage = entry.target;
+            lazyImage.src = lazyImage.dataset.src;
+            lazyImage.classList.remove("lazy");
+            lazyImageObserver.unobserve(lazyImage);
+          }
+        });
+      });
+
+      lazyImages.forEach(function(lazyImage) {
+        lazyImageObserver.observe(lazyImage);
+      });
+    }
   });
 </script>
 </body>
