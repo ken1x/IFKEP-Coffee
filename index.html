@@ -39,10 +39,6 @@ nav.bg-white {
 .modal {
   position: relative;
   z-index: var(--modal-content-z);
-  width: 100%;
-  max-width: 500px;
-  height: auto;
-  min-height: 200px;
 }
 
     :root {
@@ -343,7 +339,6 @@ nav.bg-white {
     .gallery-item img {
       width: 100%;
       height: 250px;
-      aspect-ratio: 4/3;
       object-fit: cover;
       
     }
@@ -885,11 +880,7 @@ nav.bg-white {
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="script.js"></script>
   <script type="module">
-    import("https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js").then((module) => {
-  const firebase = module.initializeApp(firebaseConfig);
-  // Rest of your firebase code
-});
-
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
     import {
       getAuth,
       createUserWithEmailAndPassword,
