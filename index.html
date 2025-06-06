@@ -461,9 +461,9 @@ nav.bg-white {
         <div class="flex">
           <div class="flex items-center space-x-2">
   <a href="#home" class="flex items-center space-x-2">
-    <img class="desktop-logo h-16 w-auto" src="assets/logo.png" alt="Логотип IFKEP">
+    <img class="desktop-logo h-16 w-auto" src="assets/logo.webp" alt="Логотип IFKEP">
     
-    <img class="mobile-logo h-14 w-auto" src="assets/logo-mobile.png" alt="Логотип IFKEP">
+    <img class="mobile-logo h-14 w-auto" src="assets/logo-mobile.webp" alt="Логотип IFKEP">
   </a>
 </div>
           <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -524,22 +524,22 @@ nav.bg-white {
       <p class="text-lg text-center text-gray-600 mb-12">Відкрийте для себе тепло, смаки та атмосферу, які роблять IFKEP Coffee особливим.</p>
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div class="gallery-item">
-          <img src="assets/placeholder.jpg" data-src="assets/intu.png" alt="Затишна кав’ярня" width="400" height="300" loading="lazy" class="lazy">
+          <img src="assets/placeholder.webp" data-src="assets/intu.webp" alt="Затишна кав’ярня" width="400" height="300" loading="lazy" class="lazy">
         </div>
         <div class="gallery-item">
-          <img src="assets/placeholder.jpg" data-src="assets/coffeepour.png" loading="lazy" class="lazy" alt="Інтер’єр кав’ярні">
+          <img src="assets/placeholder.webp" data-src="assets/coffeepour.webp" loading="lazy" class="lazy" alt="Інтер’єр кав’ярні">
         </div>
         <div class="gallery-item">
-          <img src="assets/placeholder.jpg" data-src="assets/coffeeplants.png" loading="lazy" class="lazy" alt="Рослини в кав’ярні">
+          <img src="assets/placeholder.webp" data-src="assets/coffeeplants.webp" loading="lazy" class="lazy" alt="Рослини в кав’ярні">
         </div>
         <div class="gallery-item">
-          <img src="assets/placeholder.jpg" data-src="assets/coffeebar.png" loading="lazy" class="lazy" alt="Бар кав’ярні">
+          <img src="assets/placeholder.webp" data-src="assets/coffeebar.webp" loading="lazy" class="lazy" alt="Бар кав’ярні">
         </div>
         <div class="gallery-item">
-          <img src="assets/placeholder.jpg" data-src="assets/coffeeint.png" loading="lazy" class="lazy" alt="Інтер’єр кав’ярні">
+          <img src="assets/placeholder.webp" data-src="assets/coffeeint.webp" loading="lazy" class="lazy" alt="Інтер’єр кав’ярні">
         </div>
         <div class="gallery-item">
-          <img src="assets/placeholder.jpg" data-src="assets/coffeekitchen.png" loading="lazy" class="lazy" alt="Бариста за роботою">
+          <img src="assets/placeholder.webp" data-src="assets/coffeekitchen.webp" loading="lazy" class="lazy" alt="Бариста за роботою">
         </div>
       </div>
     </div>
@@ -585,7 +585,7 @@ nav.bg-white {
           </div>
         </div>
         <div>
-          <img class="w-full rounded-lg shadow-md" src="assets/interier.jpg" alt="Інтер’єр кав’ярні" loading="lazy">
+          <img class="w-full rounded-lg shadow-md" src="assets/interier.webp" alt="Інтер’єр кав’ярні" loading="lazy">
         </div>
       </div>
     </div>
@@ -1136,6 +1136,25 @@ nav.bg-white {
             document.getElementById('admin-panel-btn').classList.add('hidden');
             cart.updateUI();
             document.getElementById('login-btn').style.display = '';
+
+            // Check for pendingUser in localStorage
+            const saved = localStorage.getItem('pendingUser');
+            if (saved) {
+              const { email, password } = JSON.parse(saved);
+              try {
+                const cred = await firebase.signInWithEmailAndPassword(firebase.auth, email, password);
+                if (cred.user.emailVerified) {
+                  utils.showAlert('Email підтверджено. Ви автоматично увійшли!');
+                  localStorage.removeItem('pendingUser');
+                } else {
+                  await firebase.signOut(firebase.auth);
+                  utils.showAlert('Будь ласка, підтвердіть вашу пошту перед входом.', 'warning');
+                }
+              } catch (e) {
+                console.error(e);
+                localStorage.removeItem('pendingUser');
+              }
+            }
           }
         });
       },
@@ -1172,6 +1191,7 @@ nav.bg-white {
           const user = userCredential.user;
 
           await firebase.sendEmailVerification(user);
+          localStorage.setItem('pendingUser', JSON.stringify({ email, password }));
           DOM.signupModal.classList.add('hidden');
           utils.showAlert('Реєстрація успішна! Перевірте вашу електронну пошту для підтвердження.');
         } catch (error) {
@@ -1182,6 +1202,7 @@ nav.bg-white {
       async logout() {
         try {
           await firebase.signOut(firebase.auth);
+          localStorage.removeItem('pendingUser');
           utils.showAlert('Ви вийшли з акаунта.');
         } catch (error) {
           utils.showAlert('Помилка при виході: ' + error.message);
@@ -1374,6 +1395,8 @@ nav.bg-white {
           const itemTotal = item.price * item.quantity;
           total += itemTotal;
           itemCount += item.quantity; 
+
+          
 
           const cartItem = document.createElement('div');
           cartItem.className = 'cart-item flex flex-col sm:flex-row justify-between items-start sm:items-center border-b py-2';
