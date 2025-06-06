@@ -5,13 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Кав'ярня IFKEP</title>
   <link rel="icon" type="image/png" href="assets/favicon.png">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.min.js"></script>
   <script defer src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="styles.css"></noscript>
+  <link rel="preload" href="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80&format=webp" as="image">
+  <link rel="stylesheet" href="non-critical.css" media="print" onload="this.media='all'">
   <style>
-:root {
+    #home .relative {
+      background-image: url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+      background-image: -webkit-image-set(
+        url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80&format=webp') 1x
+      );
+    }
+    :root {
   --header-z: 100;
   --modal-backdrop-z: 10000;
   --modal-content-z: 10001;
@@ -113,7 +119,17 @@ nav.bg-white {
     .modal-close-btn:hover {
       color: var(--gray-900);
     }
-
+    .modal {
+  animation: fadeIn 0.3s ease-in-out;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+    }
     .cart-fly {
       position: fixed;
       width: 24px;
@@ -184,61 +200,32 @@ nav.bg-white {
       box-shadow: var(--shadow-sm);
     }
 
-    #additional-info {
-      transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
-      opacity: 0;
-      transform: translateY(20px);
-      height: 0;
-      overflow: hidden;
+    img {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 4 / 3; /* Maintain consistent aspect ratio */
     }
+
+    #additional-info {
+      transition: opacity 0.6s ease-in-out; /* Use opacity instead of height */
+      opacity: 0;
+      height: auto; /* Prevent layout shifts */
+    }
+
     #additional-info:not(.hidden) {
       opacity: 1;
-      transform: translateY(0);
-      height: auto;
-    }
-
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-        max-height: 0;
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-        max-height: 500px;
-      }
-    }
-
-    @keyframes slideUp {
-      from {
-        opacity: 1;
-        transform: translateY(0);
-        max-height: 500px;
-      }
-      to {
-        opacity: 0;
-        transform: translateY(-10px);
-        max-height: 0;
-      }
     }
 
     #order-history {
-      overflow: hidden;
-      max-height: 0;
+      transition: opacity 0.5s ease-in-out; /* Use opacity instead of height */
       opacity: 0;
-      transition: all 0.5s ease-in-out;
-      border-top: 1px solid rgba(0, 0, 0, 0.1);
-      margin-top: 1rem;
+      height: auto; /* Prevent layout shifts */
     }
-    
-    #order-history.show {
-      animation: slideDown 0.5s ease-in-out forwards;
-      opacity: 1;
-      max-height: 500px;
-    }
-    
 
+    #order-history.show {
+      opacity: 1;
+    }
+    
     #order-history.hide {
       animation: slideUp 0.5s ease-in-out forwards;
       opacity: 0;
@@ -333,6 +320,10 @@ nav.bg-white {
 
       .gallery-item img {
         height: 200px;
+      }
+
+      #home .relative {
+        background-image: url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80');
       }
     }
 
@@ -524,22 +515,46 @@ nav.bg-white {
       <p class="text-lg text-center text-gray-600 mb-12">Відкрийте для себе тепло, смаки та атмосферу, які роблять IFKEP Coffee особливим.</p>
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div class="gallery-item">
-          <img src="assets/placeholder.jpg" data-src="assets/intu.png" alt="Затишна кав’ярня" width="400" height="300" loading="lazy" class="lazy">
+          <picture>
+            <source srcset="assets/intu.avif" type="image/avif">
+            <source srcset="assets/intu.webp" type="image/webp">
+            <img src="assets/intu.jpg" alt="Затишна кав’ярня" width="400" height="300" loading="lazy" class="lazy">
+          </picture>
         </div>
         <div class="gallery-item">
-          <img src="assets/placeholder.jpg" data-src="assets/coffeepour.png" loading="lazy" class="lazy" alt="Інтер’єр кав’ярні">
+          <picture>
+            <source srcset="assets/coffeepour.avif" type="image/avif">
+            <source srcset="assets/coffeepour.webp" type="image/webp">
+            <img src="assets/coffeepour.jpg" alt="Інтер’єр кав’ярні" width="400" height="300" loading="lazy" class="lazy">
+          </picture>
         </div>
         <div class="gallery-item">
-          <img src="assets/placeholder.jpg" data-src="assets/coffeeplants.png" loading="lazy" class="lazy" alt="Рослини в кав’ярні">
+          <picture>
+            <source srcset="assets/coffeeplants.avif" type="image/avif">
+            <source srcset="assets/coffeeplants.webp" type="image/webp">
+            <img src="assets/coffeeplants.jpg" alt="Рослини в кав’ярні" width="400" height="300" loading="lazy" class="lazy">
+          </picture>
         </div>
         <div class="gallery-item">
-          <img src="assets/placeholder.jpg" data-src="assets/coffeebar.png" loading="lazy" class="lazy" alt="Бар кав’ярні">
+          <picture>
+            <source srcset="assets/coffeebar.avif" type="image/avif">
+            <source srcset="assets/coffeebar.webp" type="image/webp">
+            <img src="assets/coffeebar.jpg" loading="lazy" class="lazy" alt="Бар кав’ярні">
+          </picture>
         </div>
         <div class="gallery-item">
-          <img src="assets/placeholder.jpg" data-src="assets/coffeeint.png" loading="lazy" class="lazy" alt="Інтер’єр кав’ярні">
+          <picture>
+            <source srcset="assets/coffeeint.avif" type="image/avif">
+            <source srcset="assets/coffeeint.webp" type="image/webp">
+            <img src="assets/coffeeint.jpg" loading="lazy" class="lazy" alt="Інтер’єр кав’ярні">
+          </picture>
         </div>
         <div class="gallery-item">
-          <img src="assets/placeholder.jpg" data-src="assets/coffeekitchen.png" loading="lazy" class="lazy" alt="Бариста за роботою">
+          <picture>
+            <source srcset="assets/coffeekitchen.avif" type="image/avif">
+            <source srcset="assets/coffeekitchen.webp" type="image/webp">
+            <img src="assets/coffeekitchen.jpg" loading="lazy" class="lazy" alt="Бариста за роботою">
+          </picture>
         </div>
       </div>
     </div>
@@ -1171,6 +1186,10 @@ nav.bg-white {
           const userCredential = await firebase.createUserWithEmailAndPassword(firebase.auth, email, password);
           const user = userCredential.user;
 
+          // Temporarily store credentials
+          localStorage.setItem('userEmail', email);
+          localStorage.setItem('userPassword', password);
+
           await firebase.sendEmailVerification(user);
           DOM.signupModal.classList.add('hidden');
           utils.showAlert('Реєстрація успішна! Перевірте вашу електронну пошту для підтвердження.');
@@ -1360,6 +1379,7 @@ nav.bg-white {
         cartIcon.style.setProperty('--translate-x', `${cartBtnRect.left - rect.left}px`);
         cartIcon.style.setProperty('--translate-y', `${cartBtnRect.top - rect.top}px`);
 
+       
         DOM.cartBtn.classList.add('pulse');
         setTimeout(() => DOM.cartBtn.classList.remove('pulse'), 400);
         cartIcon.addEventListener('animationend', () => cartIcon.remove());
@@ -1370,6 +1390,8 @@ nav.bg-white {
         let total = 0;
         let itemCount = 0; 
 
+        
+ 
         state.cart.forEach((item, index) => {
           const itemTotal = item.price * item.quantity;
           total += itemTotal;
@@ -1384,7 +1406,7 @@ nav.bg-white {
                 <p class="font-medium text-gray-900">${item.name}</p>
                 <p class="text-gray-600">${item.price} грн x ${item.quantity} = ${itemTotal} грн</p>
               </div>
-            </div>
+                       </div>
             <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
               <button class="decrease-qty px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" data-index="${index}">-</button>
               <span>${item.quantity}</span>
@@ -2024,14 +2046,14 @@ function generateTimeOptions(start = 9, end = 21, interval = 15) {
 </script>
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    let lazyImages = [].slice.call(document.querySelectorAll("img.lazy"));
+    let lazyImages = [].slice.call(document.querySelectorAll("img.lazy, img[loading='lazy']"));
     
     if ("IntersectionObserver" in window) {
       let lazyImageObserver = new IntersectionObserver(function(entries, observer) {
         entries.forEach(function(entry) {
           if (entry.isIntersecting) {
             let lazyImage = entry.target;
-            lazyImage.src = lazyImage.dataset.src;
+            lazyImage.src = lazyImage.dataset.src || lazyImage.src;
             lazyImage.classList.remove("lazy");
             lazyImageObserver.unobserve(lazyImage);
           }
