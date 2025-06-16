@@ -4,12 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Кав'ярня IFKEP</title>
-  <link rel="icon" type="image/png" href="assets/favicon.png">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.min.js"></script>
+  <link rel="icon" type="image/png" href="assets/favicon.webp">
+  <script type="module">
+    import Swal from 'https://cdn.jsdelivr.net/npm/sweetalert2@11/src/sweetalert2.js';
+    window.Swal = Swal;
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <script defer src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="styles.css"></noscript>
   <style>
 :root {
   --header-z: 100;
@@ -87,6 +89,10 @@ nav.bg-white {
     .gallery-item:hover::after {
       opacity: 1;
     }
+
+    .swal2-container {
+  z-index: 20010 !important;
+}
 
     .modal {
       animation: fadeIn 0.3s ease-in-out;
@@ -524,7 +530,7 @@ nav.bg-white {
       <p class="text-lg text-center text-gray-600 mb-12">Відкрийте для себе тепло, смаки та атмосферу, які роблять IFKEP Coffee особливим.</p>
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div class="gallery-item">
-          <img src="assets/placeholder.webp" data-src="assets/intu.webp" alt="Затишна кав’ярня" width="400" height="300" loading="lazy" class="lazy">
+          <img src="assets/placeholder.webp" data-src="assets/intu.webp" class="lazy" alt="Затишна кав’ярня" width="400" height="300" loading="lazy">
         </div>
         <div class="gallery-item">
           <img src="assets/placeholder.webp" data-src="assets/coffeepour.webp" loading="lazy" class="lazy" alt="Інтер’єр кав’ярні">
@@ -673,7 +679,6 @@ nav.bg-white {
     </div>
   </div>
 
-  <!-- Cart Modal -->
   <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1010]" role="dialog" aria-labelledby="cart-modal-title">
     <div class="modal">
       <button id="cart-close-btn" class="modal-close-btn" aria-label="Закрити модальне вікно кошика">
@@ -697,7 +702,6 @@ nav.bg-white {
     </div>
   </div>
 
-  <!-- Checkout Modal -->
   <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[1020]" role="dialog" aria-labelledby="checkout-modal-title">
     <div class="modal">
       <button id="checkout-close-btn" class="modal-close-btn" aria-label="Закрити модальне вікно оформлення">
@@ -878,7 +882,6 @@ nav.bg-white {
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script defer src="script.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
     import {
@@ -1029,18 +1032,19 @@ nav.bg-white {
       sanitizeInput(input) {
         return input.replace(/[<>]/g, '');
       },
-
+      
+      // Оновлена функція showAlert
       showAlert(message, type = 'info') {
+        const titleMap = {
+          success: 'Готово!',
+          error: 'Помилка',
+          warning: 'Увага',
+          info: 'Повідомлення'
+        };
+
         Swal.fire({
           icon: type,
-          title:
-            type === 'success'
-              ? 'Готово!'
-              : type === 'error'
-              ? 'Помилка'
-              : type === 'warning'
-              ? 'Увага'
-              : 'Повідомлення',
+          title: titleMap[type] || 'Повідомлення',
           text: message,
           confirmButtonColor: '#38a169'
         });
@@ -1124,7 +1128,7 @@ nav.bg-white {
             document.getElementById('admin-panel-btn').classList.add('hidden');
 
             if (this.justLoggedIn) {
-              utils.showAlert('Успішний вхід!');
+              utils.showAlert('Успішний вхід!', 'info'); // 'info' тип для відповідності скріншоту
               this.justLoggedIn = false;
             }
 
@@ -1144,7 +1148,7 @@ nav.bg-white {
               try {
                 const cred = await firebase.signInWithEmailAndPassword(firebase.auth, email, password);
                 if (cred.user.emailVerified) {
-                  utils.showAlert('Email підтверджено. Ви автоматично увійшли!');
+                  utils.showAlert('Email підтверджено. Ви автоматично увійшли!', 'success');
                   localStorage.removeItem('pendingUser');
                 } else {
                   await firebase.signOut(firebase.auth);
@@ -1193,7 +1197,7 @@ nav.bg-white {
           await firebase.sendEmailVerification(user);
           localStorage.setItem('pendingUser', JSON.stringify({ email, password }));
           DOM.signupModal.classList.add('hidden');
-          utils.showAlert('Реєстрація успішна! Перевірте вашу електронну пошту для підтвердження.');
+          utils.showAlert('Реєстрація успішна! Перевірте вашу електронну пошту для підтвердження.', 'success');
         } catch (error) {
           this.showError(DOM.signupError, this.getErrorMessage(error.code));
         }
@@ -1205,7 +1209,7 @@ nav.bg-white {
           localStorage.removeItem('pendingUser');
           utils.showAlert('Ви вийшли з акаунта.');
         } catch (error) {
-          utils.showAlert('Помилка при виході: ' + error.message);
+          utils.showAlert('Помилка при виході: ' + error.message, 'error');
         }
       },
 
@@ -1232,7 +1236,7 @@ nav.bg-white {
         if (!state.user) {
           DOM.checkoutModal.classList.add('hidden');
           DOM.loginModal.classList.remove('hidden');
-          utils.showAlert('Будь ласка, увійдіть, щоб створити замовлення.');
+          utils.showAlert('Будь ласка, увійдіть, щоб створити замовлення.', 'warning');
           return;
         }
 
@@ -1278,7 +1282,7 @@ nav.bg-white {
           if (state.deliveryMethod === 'delivery') {
             const address = utils.sanitizeInput(DOM.deliveryAddress.value);
             if (!address) {
-              utils.showAlert('Будь ласка, введіть адресу доставки.');
+              utils.showAlert('Будь ласка, введіть адресу доставки.', 'warning');
               return;
             }
             orderDetails.deliveryAddress = address;
@@ -1287,7 +1291,7 @@ nav.bg-white {
           if (state.deliveryMethod === 'pickup') {
             const location = DOM.checkoutLocation.value;
             if (!location) {
-              utils.showAlert('Будь ласка, оберіть локацію самовивозу.');
+              utils.showAlert('Будь ласка, оберіть локацію самовивозу.', 'warning');
               return;
             }
             orderDetails.location = location;
@@ -1296,7 +1300,7 @@ nav.bg-white {
           const orderRef = firebase.doc(firebase.db, 'orders', orderId);
           await firebase.setDoc(orderRef, orderDetails);
 
-          utils.showAlert('Замовлення успішно створено!');
+          utils.showAlert('Замовлення успішно створено!', 'success');
           DOM.checkoutModal.classList.add('hidden');
           DOM.orderForm.reset();
           state.cart = []; 
@@ -1456,12 +1460,12 @@ nav.bg-white {
       },
       submitOrder() {
         if (!state.cart.length) {
-          utils.showAlert('Ваш кошик порожній.');
+          utils.showAlert('Ваш кошик порожній.', 'warning');
           return;
         }
 
         if (!state.user) {
-          utils.showAlert('Будь ласка, увійдіть, щоб оформити замовлення.');
+          utils.showAlert('Будь ласка, увійдіть, щоб оформити замовлення.', 'warning');
           DOM.checkoutModal.classList.add('hidden');
           DOM.loginModal.classList.remove('hidden');
           return;
@@ -1473,7 +1477,7 @@ nav.bg-white {
 
 
         if (!customerName || !customerPhone) {
-          utils.showAlert('Будь ласка, введіть ім’я, прізвище та номер телефону.');
+          utils.showAlert('Будь ласка, введіть ім’я, прізвище та номер телефону.', 'warning');
           return;
         }
 
@@ -1481,7 +1485,7 @@ nav.bg-white {
         if (state.deliveryMethod === 'pickup') {
           const location = DOM.checkoutLocation.value;
           if (!location) {
-            utils.showAlert('Будь ласка, оберіть локацію самовивозу.');
+            utils.showAlert('Будь ласка, оберіть локацію самовивозу.', 'warning');
             return;
           }
           orderDetails = { 
@@ -1494,7 +1498,7 @@ nav.bg-white {
         } else {
           const address = utils.sanitizeInput(DOM.deliveryAddress.value);
           if (!address) {
-            utils.showAlert('Будь ласка, введіть адресу доставки.');
+            utils.showAlert('Будь ласка, введіть адресу доставки.', 'warning');
             return;
           }
           orderDetails = { 
@@ -1509,7 +1513,7 @@ nav.bg-white {
 
 
         console.log('Замовлення:', orderDetails);
-        utils.showAlert('Замовлення успішно розміщено!');
+        utils.showAlert('Замовлення успішно розміщено!', 'success');
         state.cart = [];
         this.updateUI();
         DOM.checkoutModal.classList.add('hidden');
@@ -1635,7 +1639,7 @@ nav.bg-white {
           console.log('User not logged in, showing login modal');
           DOM.cartModal.classList.add('hidden');
           DOM.loginModal.classList.remove('hidden');
-          utils.showAlert('Будь ласка, увійдіть, щоб оформити замовлення.');
+          utils.showAlert('Будь ласка, увійдіть, щоб оформити замовлення.', 'warning');
           return;
         }
         console.log('User logged in, proceeding to checkout');
